@@ -22,41 +22,63 @@ class MainWindow(QtWidgets.QWidget):
         self.setup_connections()
 
     def create_widgets(self):
-        
         self.lw_files = QtWidgets.QListWidget()
         self.lbl_dropInfo = QtWidgets.QLabel('Drop images on above UI')
+        self.btn_convert = QtWidgets.QPushButton('Convert')
+        self.color_blue = QtGui.QColor(186,209,224)
+        self.color_green = QtGui.QColor(200,237,172)
+
+        self.le_filename = QtWidgets.QLineEdit('Filename')
+
+        self.combo_format = QtWidgets.QComboBox()
 
         self.btn_outputFolder = QtWidgets.QPushButton()
         self.le_outputFolder = QtWidgets.QLineEdit('Ouput Folder')
         # QFileDialog.getExistingDirectory
         self.le_outputFolder = QtWidgets.QLineEdit()
-
-        self.btn_convert = QtWidgets.QPushButton('Convert')
-
-        self.color_blue = QtGui.QColor(186,209,224)
-        self.color_green = QtGui.QColor(200,237,172)
             
     def modify_widgets(self):
-        self.btn_outputFolder.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogOpenButton')))
-        self.le_outputFolder.setAlignment(QtCore.Qt.AlignRight)
-        
-        # Misc
-        self.le_outputFolder.setText('Output Folder...')
         self.lbl_dropInfo.setVisible(False)
-
         self.setAcceptDrops(True)
         self.lw_files.setAlternatingRowColors(True)
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+
+        self.combo_format.addItem('mp4')
+        self.combo_format.addItem('mov')
+        
+        self.btn_outputFolder.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogOpenButton')))
+        # self.le_outputFolder.setAlignment(QtCore.Qt.AlignRight)
+        self.le_outputFolder.setText('Output Folder...')
         
     def create_layouts(self):
-        self.main_layout = QtWidgets.QGridLayout(self)
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+
+        self.left_layout = QtWidgets.QGridLayout(self)
+        self.main_layout.addLayout(self.left_layout)
+
+        self.right_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.addLayout(self.right_layout)
+
+        self.right_form_layout = QtWidgets.QFormLayout(self)
+        self.right_layout.addLayout(self.right_form_layout)
+
+        self.right_folder_layout = QtWidgets.QHBoxLayout(self)
+        self.right_layout.addLayout(self.right_folder_layout)
+        
         
     def add_widgets_to_layouts(self):
-        self.main_layout.addWidget(self.lw_files, 0, 0, 1, 2)
-        self.main_layout.addWidget(self.lbl_dropInfo, 1, 0, 1, 2)
-        self.main_layout.addWidget(self.btn_outputFolder, 2, 0, 1, 1)
-        self.main_layout.addWidget(self.le_outputFolder, 2, 1, 1, 1)
-        self.main_layout.addWidget(self.btn_convert, 3, 0, 1, 2)
+        self.main_layout.addLayout(self.left_layout)
+        self.main_layout.addLayout(self.right_layout)
+
+        self.left_layout.addWidget(self.lw_files, 0, 0, 1, 2)
+        self.left_layout.addWidget(self.lbl_dropInfo, 1, 0, 1, 2)
+        self.left_layout.addWidget(self.btn_convert, 2, 0, 1, 2)
+
+        self.right_form_layout.addRow('Filename',self.le_filename)
+        self.right_form_layout.addRow('Format',self.combo_format)
+        self.right_folder_layout.addWidget(self.btn_outputFolder)
+        self.right_folder_layout.addWidget(self.le_outputFolder)
+        
     
     def setup_connections(self):
         QtGui.QShortcut(QtGui.QKeySequence('Delete'), self.lw_files, self.delete_selected_item)
@@ -138,7 +160,7 @@ class MainWindow(QtWidgets.QWidget):
 
 
     ##################################################################### 22/01/06     
-    #see if listwidget_item dcan be more thatn text (something like a QHBoxLayout with name, range, icon, whatever)
+    #see if listwidget_item can be more thatn text (something like a QHBoxLayout with name, range, icon, whatever)
     # list widget items should have the same attributes as the collection: head, start, end... etc 
     # add properties to lw_item?
     # if not head the same:
