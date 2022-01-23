@@ -1,1 +1,0 @@
-print('Z:/jobs/RD_210926/Data/research/mp4Converter/apps/fusion/renders/hyq010_All_bty/v018/dev010_lin_l1.%04d.jpg')

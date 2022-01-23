@@ -3,7 +3,7 @@ import os
 import asyncio
 from ffmpeg import FFmpeg
 
-from constants import FFMPEG_PATH
+from package.constants import FFMPEG_PATH
 
 class ConvertToMovie:
     def __init__(self, sourcepath='', outputfolder='', filename='', format='mp4', framerate=23.976, startframe=1001): 
@@ -19,13 +19,8 @@ class ConvertToMovie:
     def to_mp4(self):
         destinationfile = os.path.join(self.outputfolder, f'{self.filename}.{self.format}')
         destinationfile = destinationfile.replace('/','\\')
-        ffmpegpath = FFMPEG_PATH.replace('\\','/')
-        # command =  f'{ffmpegpath} -framerate {self.framerate} -start_number {self.startframe} -i {self.sourcepath} -c:v libx264 -crf 23 -pix_fmt yuv420p -y {self.destinationfile}'
-        # -y -> overwrite outputfile
-        # output = subprocess.run(command, capture_output=True)
-        # print(destinationfile)
-        
 
+        ffmpegpath = FFMPEG_PATH.replace('\\','/')
 
         ffmpeg = FFmpeg(executable=FFMPEG_PATH).option('y').input(
             self.sourcepath,
@@ -40,7 +35,9 @@ class ConvertToMovie:
 
         @ffmpeg.on('progress')
         def on_progress(progress):
-            print(progress)
+            frame = int(str(progress).split(',')[0].split('=')[-1])
+            # TO DO : pass first and last and do frame/(last-first)
+            print(frame)
 
         @ffmpeg.on('completed')
         def on_completed():

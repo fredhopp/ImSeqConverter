@@ -38,13 +38,15 @@ class SequencesFromFiles():
         collection.end = str(collection).split()[1].replace('[','').replace(']','').split('-')[1]
         
         shortname = os.path.basename(collection.head)
+        folder =  os.path.dirname(collection.head)
         if shortname[-1] == '.' or shortname[-1] == '_':
             shortname = shortname[:-1]
         collection.shortname = shortname
+        collection.folder = folder
     
     @property
     def sequences(self):
-        print(self.selected_collections)
+        # print(self.selected_collections)
         return self.selected_collections
 
 if __name__=='__main__':
