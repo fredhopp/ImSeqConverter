@@ -11,6 +11,7 @@ class ConvertToMovie():
                 sourcepath='',
                 filename='',
                 format='mp4',
+                quality='High',
                 fps='23.976',
                 startframe=1001,
                 framerange=2,
@@ -21,22 +22,31 @@ class ConvertToMovie():
         self.outputfolder = outputfolder
         self.filename = filename
         self.startframe = startframe
-        self.format = format
+        if format=='prores-mov':
+            format='mov'
+        self.extension = format
+        self.quality = quality
         self.framerange = framerange
-        self.destinationfile = os.path.join(os.path.normpath(self.outputfolder), f'{self.filename}.{self.format}')
+        self.destinationfile = os.path.join(os.path.normpath(self.outputfolder), f'{self.filename}.{self.extension}')
     
     def to_movie(self):
         ffmpegpath = FFMPEG_PATH.replace('\\','/')
         sourcepath = self.sourcepath.replace('\\','/')
         destinationfile = self.destinationfile.replace('\\','/') # testing on a windows 10 OS
 
-        # ffmpeg_args = f'-start_number {self.startframe} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -vf format=yuv420p "{destinationfile}"'
-        ffmpeg_args = f'-start_number {self.startframe} -y -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -vf format=yuv420p "{destinationfile}"'
+        if self.extension == 'mp4':
+            dic_quality = {'High': 18, 'Medium': 23, 'Low': 28}
+            # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
+            ffmpeg_args = f'-start_number {self.startframe} -y -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf format=yuv420p "{destinationfile}"'
+        else:  # prores
+            dic_quality = {'High': 3, 'Medium': 2, 'Low': 1}
+            # -profile:v -> lt (1) standard (2) hq (3)
+            ffmpeg_args = f'-start_number {self.startframe} -y -i "{sourcepath}" -vframes {self.framerange} -c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le "{destinationfile}"'
 
-        ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}'.replace('/','\\')
-        returned_value = subprocess.call(ffmpeg_command, shell=True)
-        print(returned_value)
-        if not returned_value:
+        ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}'.replace('/', '\\')
+        returned_value = subprocess.call(ffmpeg_command, shell=False)
+        
+        if not returned_value:  # exit code 0 means successful
             return True
         
 

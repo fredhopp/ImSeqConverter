@@ -22,6 +22,7 @@ class SequencesFromFiles():
         dir = os.path.dirname(filepath_list[0]) #assuming common folder, see if there is a need for files from multiple locations
         all_files_in_dir = glob.glob(f'{dir}\*')
         dir_collections, dir_remainder = clique.assemble(all_files_in_dir)
+        dir_remainder = [remainder.replace("\\","/") for remainder in dir_remainder]
 
         self.selected_collections = []
         for dir_collection in dir_collections:
@@ -30,7 +31,7 @@ class SequencesFromFiles():
                     self.add_properties(dir_collection)
                     self.selected_collections.append(dir_collection)
             for remainder_item in remainder:
-                if remainder_item.startswith(dir_collection.head.replace("\\","/")):
+                if remainder_item.startswith(dir_collection.head.replace("\\","/")) and remainder_item not in dir_remainder:
                     self.add_properties(dir_collection)
                     self.selected_collections.append(dir_collection)
                     

@@ -29,13 +29,14 @@ class MainWindow(QtWidgets.QWidget):
         self.color_blue = QtGui.QColor(237,247,247)
         self.color_green = QtGui.QColor(200,237,172)
 
-        self.le_outputname = QtWidgets.QLineEdit('Filename')
+        self.le_outputname = QtWidgets.QLineEdit('Output Filename')
 
         self.spn_head = QtWidgets.QSpinBox()
         self.spn_tail = QtWidgets.QSpinBox()
 
         self.combo_format = QtWidgets.QComboBox()
         self.combo_fps = QtWidgets.QComboBox()
+        self.combo_quality = QtWidgets.QComboBox()
 
         self.btn_outputFolder = QtWidgets.QPushButton()
         self.le_outputFolder = QtWidgets.QLineEdit('Ouput Folder')
@@ -47,7 +48,7 @@ class MainWindow(QtWidgets.QWidget):
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
 
         self.combo_format.addItem('mp4')
-        self.combo_format.addItem('mov')
+        self.combo_format.addItem('prores-mov')
 
         self.combo_fps.addItem('23.976')
         self.combo_fps.addItem('24')
@@ -55,11 +56,18 @@ class MainWindow(QtWidgets.QWidget):
         self.combo_fps.addItem('29.97')
         self.combo_fps.addItem('30')
 
+        self.combo_quality.addItem('High')
+        self.combo_quality.addItem('Medium')
+        self.combo_quality.addItem('Low')
+        
+
         self.spn_head.setRange(0,100)
         self.spn_tail.setRange(0,100)
         
         self.btn_outputFolder.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogOpenButton')))
         self.le_outputFolder.setText('Output Folder...')
+
+        self.update_properties_display()
         
     def create_layouts(self):
         self.main_layout = QtWidgets.QGridLayout(self)
@@ -80,11 +88,14 @@ class MainWindow(QtWidgets.QWidget):
         self.left_layout.addWidget(self.lbl_dropInfo, 1, 0, 1, 2)
         self.main_layout.addWidget(self.btn_convert, 1, 0, 1, 2)
 
-        self.right_form_layout.addRow('Filename',self.le_outputname)
+        self.right_form_layout.addRow('Output Filename',self.le_outputname)
         self.right_form_layout.addRow('Format',self.combo_format)
+        self.right_form_layout.addRow('Quality',self.combo_quality)
         self.right_form_layout.addRow('fps',self.combo_fps)
         self.right_form_layout.addRow('Trim Head',self.spn_head)
         self.right_form_layout.addRow('Trim Tail',self.spn_tail)
+        
+
         self.right_folder_layout.addWidget(self.btn_outputFolder)
         self.right_folder_layout.addWidget(self.le_outputFolder)
         
@@ -93,9 +104,10 @@ class MainWindow(QtWidgets.QWidget):
         self.lw_files.itemSelectionChanged.connect(self.update_properties_display)
         self.le_outputname.textChanged.connect(partial(self.update_sequence_attribute, 'outputname', self.le_outputname.text()))
         self.combo_format.currentTextChanged.connect(partial(self.update_sequence_attribute, 'format', self.combo_format.currentText()))
+        self.combo_quality.currentTextChanged.connect(partial(self.update_sequence_attribute, 'quality', self.combo_quality.currentText()))
         self.combo_fps.currentTextChanged.connect(partial(self.update_sequence_attribute, 'fps', self.combo_fps.currentText()))
         self.spn_head.valueChanged.connect(partial(self.update_sequence_attribute, 'head', self.spn_head.value()))
-        self.spn_tail.valueChanged.connect(partial(self.update_sequence_attribute, 'tail', self.spn_head.value()))
+        self.spn_tail.valueChanged.connect(partial(self.update_sequence_attribute, 'tail', self.spn_tail.value()))
         self.btn_outputFolder.clicked.connect(self.pick_folder)
         self.le_outputFolder.textChanged.connect(partial(self.update_sequence_attribute, 'outputfolder', self.le_outputFolder.text()))
 
@@ -110,35 +122,56 @@ class MainWindow(QtWidgets.QWidget):
             self.le_outputFolder.setText(folder)
 
     def update_sequence_attribute(self, attribute, connect_item, attrib_value ):
-        # print(f'{attribute} - {attrib_value} - {connect_item}')
         list_items = self.lw_files.selectedItems()
         if list_items:
             for list_item in list_items:
                 if isinstance(attrib_value, str) and (
                     not attrib_value.startswith('"')
                     or not attrib_value.endswith('"')
-                ): 
+                    ): 
                     attrib_value = f'"{attrib_value}"'
                 command = f'list_item.{attribute} = {attrib_value}'
                 exec(command)
 
     def update_properties_display(self):
         if self.lw_files.selectedItems():
+            self.enable_disable_attribute_widgets(False)
             list_item = self.lw_files.selectedItems()[-1]
-            self.le_outputname.setText(list_item.outputname)
             self.le_outputFolder.setText(list_item.outputfolder)
             self.spn_head.setValue(list_item.head)
             self.spn_tail.setValue(list_item.tail)
+            self.combo_quality.setCurrentText(list_item.quality)
             self.combo_format.setCurrentText(list_item.format)
             self.combo_fps.setCurrentText(list_item.fps)
+
+            if len(self.lw_files.selectedItems())==1:
+                self.le_outputname.setDisabled(False)
+                self.le_outputname.setText(list_item.outputname)
+            else:
+                self.le_outputname.setDisabled(True)
+        else:
+            self.enable_disable_attribute_widgets(True)
+
+    def enable_disable_attribute_widgets(self, arg):
+        self.le_outputname.setDisabled(arg)
+        self.le_outputFolder.setDisabled(arg)
+        self.spn_head.setDisabled(arg)
+        self.spn_tail.setDisabled(arg)
+        self.combo_quality.setDisabled(arg)
+        self.combo_format.setDisabled(arg)
+        self.combo_fps.setDisabled(arg)
+            
+    def delete_selected_item(self):
+        for lw_item in self.lw_files.selectedItems():
+            self.lw_files.takeItem(self.lw_files.row(lw_item))
 
     def convert_sequences(self):
         lw_items = [self.lw_files.item(index) for index in range(self.lw_files.count())]
         sequences_to_convert_boollist = [True for lw_item in lw_items if not lw_item.processed]
         if not sequences_to_convert_boollist:
             msg_box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning,
-                                'No image to process',
-                                'All images have been processed')
+                                'No Sequences to convert',
+                                'All sequences have been converted')
             msg_box.exec_()
             return False
 
@@ -149,9 +182,10 @@ class MainWindow(QtWidgets.QWidget):
         self.worker.moveToThread(self.thread)
         self.worker.signal_sequence_converted.connect(self.sequence_converted)
         self.thread.started.connect(self.worker.convert_sequences)
-        self.thread.finished.connect(self.thread.quit)
-        self.thread.start()
+        self.thread.finished.connect(self.finish)
 
+        self.thread.start()
+        
         self.prg_dialog = QtWidgets.QProgressDialog('Movie Conversion', 'Cancel', 1, len(sequences_to_convert_boollist))
         self.prg_dialog.canceled.connect(self.abort)
         self.prg_dialog.show()
@@ -159,16 +193,19 @@ class MainWindow(QtWidgets.QWidget):
     def abort(self):
         self.worker.runs = False
         self.thread.quit()
+    
+    def finish(self ):
+        self.prg_dialog.setValue(self.prg_dialog.maximum())
+        self.prg_dialog.cancel()
+        self.thread.quit()
 
-    def sequence_converted(self, lw_item, success):
-            if success:
+    def sequence_converted(self, lw_item, returned_value):
+            if returned_value:
                 lw_item.setIcon(self.cache_IconChecked)
+                self.prg_dialog.setValue(self.prg_dialog.value() + 1) # TO DO: still does not update properly
                 lw_item.processed = True
-                self.prg_dialog.setValue(self.prg_dialog.value() + 1)
-        
-    def delete_selected_item(self):
-        for lw_item in self.lw_files.selectedItems():
-            self.lw_files.takeItem(self.lw_files.row(lw_item))
+                self.thread.quit()
+                
 
     # Drag & Drop
     def dragEnterEvent(self, event):
@@ -207,6 +244,7 @@ class MainWindow(QtWidgets.QWidget):
                 lw_item.tail = 0
                 lw_item.format = 'mp4'
                 lw_item.fps = '23.976'
+                lw_item.quality = 'High'
                 padding_str = f'%0{seq.padding}d'
                 if seq.padding==0:
                     padding_str = '%d'

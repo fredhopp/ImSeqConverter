@@ -19,13 +19,14 @@ class Worker(QtCore.QObject):
                 movie = ConvertToMovie(sourcepath=lw_item.sourcepath,
                                         filename=lw_item.outputname,
                                         format=lw_item.format,
+                                        quality=lw_item.quality,
                                         fps=lw_item.fps,
                                         startframe = startframe,
                                         framerange = framerange,
                                         outputfolder = lw_item.outputfolder
                                         )
                 
-                success = movie.to_movie()
-                self.signal_sequence_converted.emit(lw_item, success)
-
+                returned_value = movie.to_movie()
+                self.signal_sequence_converted.emit(lw_item, returned_value)
+                
         self.finished.emit()
