@@ -8,8 +8,9 @@ import clique
 class SequencesFromFiles():
     '''
     Returns a list of clique collections from a list of filepath in a common folder representing the file sequence these files are part of
+    TO DO: need to adress missing files with a file sequence
     '''
-    def __init__(self, filepath_list ):
+    def __init__(self, filepath_list):
         self.filepath_list = filepath_list
         self.return_collections()
 
@@ -36,17 +37,16 @@ class SequencesFromFiles():
     def add_properties(self, collection):
         collection.start = str(collection).split()[1].replace('[','').replace(']','').split('-')[0]
         collection.end = str(collection).split()[1].replace('[','').replace(']','').split('-')[1]
-        
+
         shortname = os.path.basename(collection.head)
         folder =  os.path.dirname(collection.head)
-        if shortname[-1] == '.' or shortname[-1] == '_':
+        if shortname[-1] in ['.', '_']:
             shortname = shortname[:-1]
         collection.shortname = shortname
         collection.folder = folder
     
     @property
     def sequences(self):
-        # print(self.selected_collections)
         return self.selected_collections
 
 if __name__=='__main__':
