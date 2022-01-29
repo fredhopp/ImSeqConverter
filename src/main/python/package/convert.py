@@ -3,7 +3,7 @@ import subprocess
 # import asyncio
 # from ffmpeg import FFmpeg
 
-from package.constants import FFMPEG_PATH
+from package.constants import FFMPEG_PATH, LUT_PATH
 # from constants import FFMPEG_PATH # use for __main__ execution
 
 class ConvertToMovie():
@@ -15,6 +15,8 @@ class ConvertToMovie():
                 fps='23.976',
                 startframe=1001,
                 framerange=2,
+                colorspaceIn='None',
+                colorspaceOut='None',
                 outputfolder=''
                 ):
         self.fps = float(fps)
@@ -27,25 +29,48 @@ class ConvertToMovie():
         self.extension = format
         self.quality = quality
         self.framerange = framerange
+        self.colorspaceIn = colorspaceIn
+        self.colorspaceOut = colorspaceOut
         self.destinationfile = os.path.join(os.path.normpath(self.outputfolder), f'{self.filename}.{self.extension}')
     
     def to_movie(self):
-        ffmpegpath = FFMPEG_PATH.replace('\\','/')
-        sourcepath = self.sourcepath.replace('\\','/')
-        destinationfile = self.destinationfile.replace('\\','/') # testing on a windows 10 OS
+        ffmpegpath = FFMPEG_PATH.replace('/','\\')
+        sourcepath = self.sourcepath.replace('/','\\')
+        destinationfile = self.destinationfile.replace('/','\\') # testing on a windows 10 OS
 
+        use_lut = self.colorspaceIn != self.colorspaceOut
+            
+        lut_name = f'{self.colorspaceIn}_{self.colorspaceOut}.csp'
+        lut_file = os.path.join(LUT_PATH,lut_name)
+
+        # ffmpeg needs something like "Z\:/path/to/the/lut.csp" on Windows 10
+        lut_file_list = lut_file.split(':')
+        lut_file_list[0] = f'{lut_file_list[0]}\\\\'
+        lut_file_list[1] = lut_file_list[1].replace('\\','/')
+        lut_file = ':'.join(lut_file_list)
+
+
+
+        
         if self.extension == 'mp4':
             dic_quality = {'High': 18, 'Medium': 23, 'Low': 28}
             # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
-            ffmpeg_args = f'-start_number {self.startframe} -y -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf format=yuv420p "{destinationfile}"'
+            if use_lut:
+                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "format=yuv420p,lut3d={lut_file}" "{destinationfile}"' 
+            else:
+                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf format=yuv420p "{destinationfile}"' 
         else:  # prores
-            dic_quality = {'High': 3, 'Medium': 2, 'Low': 1}
-            # -profile:v -> lt (1) standard (2) hq (3)
-            ffmpeg_args = f'-start_number {self.startframe} -y -i "{sourcepath}" -vframes {self.framerange} -c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le "{destinationfile}"'
+            # -profile:v -> proxy (0) lt (1) standard (2) hq (3)
+            dic_quality = {'High': 2, 'Medium': 1, 'Low': 0}
+            if use_lut:
+                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}"  -vframes {self.framerange} -c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le -vf lut3d="{lut_file}" "{destinationfile}"'
+            else:
+                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}"  -vframes {self.framerange} -c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le "{destinationfile}"'
 
-        ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}'.replace('/', '\\')
+        ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' #.replace('/', '\\')
+        # print(ffmpeg_command)
         returned_value = subprocess.call(ffmpeg_command, shell=False)
-        
+
         if not returned_value:  # exit code 0 means successful
             return True
         

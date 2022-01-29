@@ -30,6 +30,8 @@ class MainWindow(QtWidgets.QWidget):
         self.color_green = QtGui.QColor(200,237,172)
 
         self.le_outputname = QtWidgets.QLineEdit('Output Filename')
+        self.combo_colorspaceIn = QtWidgets.QComboBox()
+        self.combo_colorspaceOut = QtWidgets.QComboBox()
 
         self.spn_head = QtWidgets.QSpinBox()
         self.spn_tail = QtWidgets.QSpinBox()
@@ -47,6 +49,15 @@ class MainWindow(QtWidgets.QWidget):
         self.lw_files.setAlternatingRowColors(True)
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
 
+        self.combo_colorspaceIn.addItem('ACEScg')
+        self.combo_colorspaceIn.addItem('Utility - Linear - sRGB')
+        self.combo_colorspaceIn.addItem('Output - sRGB')
+        self.combo_colorspaceIn.addItem('Output - Rec.709')
+
+        self.combo_colorspaceOut.addItem('Output - sRGB')
+        self.combo_colorspaceOut.addItem('Output - Rec.709')
+        self.combo_colorspaceOut.addItem('Utility - sRGB - Texture')
+        
         self.combo_format.addItem('mp4')
         self.combo_format.addItem('prores-mov')
 
@@ -89,6 +100,8 @@ class MainWindow(QtWidgets.QWidget):
         self.main_layout.addWidget(self.btn_convert, 1, 0, 1, 2)
 
         self.right_form_layout.addRow('Output Filename',self.le_outputname)
+        self.right_form_layout.addRow('Input Colorspace',self.combo_colorspaceIn)
+        self.right_form_layout.addRow('Output Colorspace',self.combo_colorspaceOut)
         self.right_form_layout.addRow('Format',self.combo_format)
         self.right_form_layout.addRow('Quality',self.combo_quality)
         self.right_form_layout.addRow('fps',self.combo_fps)
@@ -105,6 +118,8 @@ class MainWindow(QtWidgets.QWidget):
         self.le_outputname.textChanged.connect(partial(self.update_sequence_attribute, 'outputname', self.le_outputname.text()))
         self.combo_format.currentTextChanged.connect(partial(self.update_sequence_attribute, 'format', self.combo_format.currentText()))
         self.combo_quality.currentTextChanged.connect(partial(self.update_sequence_attribute, 'quality', self.combo_quality.currentText()))
+        self.combo_colorspaceIn.currentTextChanged.connect(partial(self.update_sequence_attribute, 'colorspaceIn', self.combo_quality.currentText()))
+        self.combo_colorspaceOut.currentTextChanged.connect(partial(self.update_sequence_attribute, 'colorspaceOut', self.combo_quality.currentText()))
         self.combo_fps.currentTextChanged.connect(partial(self.update_sequence_attribute, 'fps', self.combo_fps.currentText()))
         self.spn_head.valueChanged.connect(partial(self.update_sequence_attribute, 'head', self.spn_head.value()))
         self.spn_tail.valueChanged.connect(partial(self.update_sequence_attribute, 'tail', self.spn_tail.value()))
@@ -138,6 +153,8 @@ class MainWindow(QtWidgets.QWidget):
             self.enable_disable_attribute_widgets(False)
             list_item = self.lw_files.selectedItems()[-1]
             self.le_outputFolder.setText(list_item.outputfolder)
+            self.combo_colorspaceIn.setCurrentText(list_item.colorspaceIn)
+            self.combo_colorspaceOut.setCurrentText(list_item.colorspaceOut)
             self.spn_head.setValue(list_item.head)
             self.spn_tail.setValue(list_item.tail)
             self.combo_quality.setCurrentText(list_item.quality)
@@ -160,6 +177,8 @@ class MainWindow(QtWidgets.QWidget):
         self.combo_quality.setDisabled(arg)
         self.combo_format.setDisabled(arg)
         self.combo_fps.setDisabled(arg)
+        self.combo_colorspaceIn.setDisabled(arg)
+        self.combo_colorspaceOut.setDisabled(arg)
             
     def delete_selected_item(self):
         for lw_item in self.lw_files.selectedItems():
@@ -245,6 +264,9 @@ class MainWindow(QtWidgets.QWidget):
                 lw_item.format = 'mp4'
                 lw_item.fps = '23.976'
                 lw_item.quality = 'High'
+                lw_item.colorspaceIn = 'ACEScg'
+                lw_item.colorspaceOut = 'Output - sRGB'
+
                 padding_str = f'%0{seq.padding}d'
                 if seq.padding==0:
                     padding_str = '%d'

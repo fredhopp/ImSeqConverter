@@ -21,9 +21,11 @@ class Worker(QtCore.QObject):
                                         format=lw_item.format,
                                         quality=lw_item.quality,
                                         fps=lw_item.fps,
-                                        startframe = startframe,
-                                        framerange = framerange,
-                                        outputfolder = lw_item.outputfolder
+                                        startframe=startframe,
+                                        framerange=framerange,
+                                        colorspaceIn=lw_item.colorspaceIn,
+                                        colorspaceOut=lw_item.colorspaceOut,
+                                        outputfolder=lw_item.outputfolder
                                         )
                 
                 returned_value = movie.to_movie()
