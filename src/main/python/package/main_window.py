@@ -40,6 +40,8 @@ class MainWindow(QtWidgets.QWidget):
         self.combo_fps = QtWidgets.QComboBox()
         self.combo_quality = QtWidgets.QComboBox()
 
+        self.check_framenum = QtWidgets.QCheckBox()
+
         self.btn_outputFolder = QtWidgets.QPushButton()
         self.le_outputFolder = QtWidgets.QLineEdit('Ouput Folder')
             
@@ -69,12 +71,11 @@ class MainWindow(QtWidgets.QWidget):
 
         self.combo_quality.addItem('High')
         self.combo_quality.addItem('Medium')
-        self.combo_quality.addItem('Low')
-        
+        self.combo_quality.addItem('Low')       
 
         self.spn_head.setRange(0,100)
         self.spn_tail.setRange(0,100)
-        
+       
         self.btn_outputFolder.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogOpenButton')))
         self.le_outputFolder.setText('Output Folder...')
 
@@ -107,7 +108,7 @@ class MainWindow(QtWidgets.QWidget):
         self.right_form_layout.addRow('fps',self.combo_fps)
         self.right_form_layout.addRow('Trim Head',self.spn_head)
         self.right_form_layout.addRow('Trim Tail',self.spn_tail)
-        
+        self.right_form_layout.addRow('Overlay Frame Number',self.check_framenum)        
 
         self.right_folder_layout.addWidget(self.btn_outputFolder)
         self.right_folder_layout.addWidget(self.le_outputFolder)
@@ -123,6 +124,7 @@ class MainWindow(QtWidgets.QWidget):
         self.combo_fps.currentTextChanged.connect(partial(self.update_sequence_attribute, 'fps', self.combo_fps.currentText()))
         self.spn_head.valueChanged.connect(partial(self.update_sequence_attribute, 'head', self.spn_head.value()))
         self.spn_tail.valueChanged.connect(partial(self.update_sequence_attribute, 'tail', self.spn_tail.value()))
+        self.check_framenum.stateChanged.connect(partial(self.update_sequence_attribute, 'ovl_framenum', self.check_framenum.isChecked()))
         self.btn_outputFolder.clicked.connect(self.pick_folder)
         self.le_outputFolder.textChanged.connect(partial(self.update_sequence_attribute, 'outputfolder', self.le_outputFolder.text()))
 
@@ -160,6 +162,7 @@ class MainWindow(QtWidgets.QWidget):
             self.combo_quality.setCurrentText(list_item.quality)
             self.combo_format.setCurrentText(list_item.format)
             self.combo_fps.setCurrentText(list_item.fps)
+            self.check_framenum.setChecked(list_item.ovl_framenum)
 
             if len(self.lw_files.selectedItems())==1:
                 self.le_outputname.setDisabled(False)
@@ -179,6 +182,7 @@ class MainWindow(QtWidgets.QWidget):
         self.combo_fps.setDisabled(arg)
         self.combo_colorspaceIn.setDisabled(arg)
         self.combo_colorspaceOut.setDisabled(arg)
+        self.check_framenum.setDisabled(arg)
             
     def delete_selected_item(self):
         for lw_item in self.lw_files.selectedItems():
@@ -225,7 +229,6 @@ class MainWindow(QtWidgets.QWidget):
                 lw_item.processed = True
                 self.thread.quit()
                 
-
     # Drag & Drop
     def dragEnterEvent(self, event):
         self.lbl_dropInfo.setVisible(True)
@@ -266,6 +269,7 @@ class MainWindow(QtWidgets.QWidget):
                 lw_item.quality = 'High'
                 lw_item.colorspaceIn = 'ACEScg'
                 lw_item.colorspaceOut = 'Output - sRGB'
+                lw_item.ovl_framenum = False
 
                 padding_str = f'%0{seq.padding}d'
                 if seq.padding==0:

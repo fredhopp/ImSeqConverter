@@ -17,6 +17,7 @@ class ConvertToMovie():
                 framerange=2,
                 colorspaceIn='None',
                 colorspaceOut='None',
+                overlay_framenum=False,
                 outputfolder=''
                 ):
         self.fps = float(fps)
@@ -31,6 +32,7 @@ class ConvertToMovie():
         self.framerange = framerange
         self.colorspaceIn = colorspaceIn
         self.colorspaceOut = colorspaceOut
+        self.overlay_framenum = overlay_framenum 
         self.destinationfile = os.path.join(os.path.normpath(self.outputfolder), f'{self.filename}.{self.extension}')
     
     def to_movie(self):
@@ -45,18 +47,21 @@ class ConvertToMovie():
 
         font_path = FONT
         font_path = self.ffmpegFilter_path(font_path)
+        ffmpeg_frameOverlay_arg = ''
+        if self.overlay_framenum:
+            ffmpeg_frameOverlay_arg = (f'drawtext=fontfile={font_path}:'
+                                        r"text='%{frame_num}':"
+                                        f'start_number={self.startframe}:'
+                                        r'x=(w-tw)/2:'
+                                        # r"y=h-(2*lh):" # jitters because ofvariable character height :(
+                                        r'y=h-ceil(h/20):'
+                                        r'fontcolor=LightGrey:'
+                                        r'fontsize=ceil(h/20):'
+                                        r'box=0:'
+                                        r'alpha=.5'
+                                        r',' # include comma, so that we can skip the overlay altogether in the command if needed
+                                        )
 
-        ffmpeg_frameOverlay_arg = (f'drawtext=fontfile={font_path}:'
-                                    r"text='%{frame_num}':"
-                                    f'start_number={self.startframe}:'
-                                    r'x=(w-tw)/2:'
-                                    # r"y=h-(2*lh):" # jitters because ofvariable character height :(
-                                    r'y=h-ceil(h/20):'
-                                    r'fontcolor=LightGrey:'
-                                    r'fontsize=ceil(h/20):'
-                                    r'box=0:'
-                                    r'alpha=.5'
-                                    )
 
         # adding black pixel padding for uneven resolutions -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"
         if self.extension == 'mp4':
@@ -64,9 +69,9 @@ class ConvertToMovie():
             # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
             # adding black pixel padding for uneven resolutions
             if use_lut:
-                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "{ffmpeg_frameOverlay_arg},format=yuv420p,lut3d={lut_path},pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
+                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "{ffmpeg_frameOverlay_arg}format=yuv420p,lut3d={lut_path},pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
             else:
-                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "{ffmpeg_frameOverlay_arg},format=yuv420p,pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
+                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "{ffmpeg_frameOverlay_arg}format=yuv420p,pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
         else:  # prores
             # -profile:v -> proxy (0) lt (1) standard (2) hq (3)
             dic_quality = {'High': 2, 'Medium': 1, 'Low': 0}

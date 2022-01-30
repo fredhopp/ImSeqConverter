@@ -25,6 +25,7 @@ class Worker(QtCore.QObject):
                                         framerange=framerange,
                                         colorspaceIn=lw_item.colorspaceIn,
                                         colorspaceOut=lw_item.colorspaceOut,
+                                        overlay_framenum=lw_item.ovl_framenum,
                                         outputfolder=lw_item.outputfolder
                                         )
                 
