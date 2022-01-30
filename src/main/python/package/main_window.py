@@ -30,15 +30,17 @@ class MainWindow(QtWidgets.QWidget):
         self.color_green = QtGui.QColor(200,237,172)
 
         self.le_outputname = QtWidgets.QLineEdit('Output Filename')
+        self.combo_format = QtWidgets.QComboBox()
+        
         self.combo_colorspaceIn = QtWidgets.QComboBox()
         self.combo_colorspaceOut = QtWidgets.QComboBox()
 
         self.spn_head = QtWidgets.QSpinBox()
         self.spn_tail = QtWidgets.QSpinBox()
-
-        self.combo_format = QtWidgets.QComboBox()
+        
         self.combo_fps = QtWidgets.QComboBox()
         self.combo_quality = QtWidgets.QComboBox()
+        self.combo_resolution = QtWidgets.QComboBox()
 
         self.check_framenum = QtWidgets.QCheckBox()
 
@@ -72,6 +74,10 @@ class MainWindow(QtWidgets.QWidget):
         self.combo_quality.addItem('High')
         self.combo_quality.addItem('Medium')
         self.combo_quality.addItem('Low')       
+        
+        self.combo_resolution.addItem('Original')
+        self.combo_resolution.addItem('1080p')
+        self.combo_resolution.addItem('UHD')
 
         self.spn_head.setRange(0,100)
         self.spn_tail.setRange(0,100)
@@ -101,14 +107,15 @@ class MainWindow(QtWidgets.QWidget):
         self.main_layout.addWidget(self.btn_convert, 1, 0, 1, 2)
 
         self.right_form_layout.addRow('Output Filename',self.le_outputname)
+        self.right_form_layout.addRow('Format',self.combo_format)
         self.right_form_layout.addRow('Input Colorspace',self.combo_colorspaceIn)
         self.right_form_layout.addRow('Output Colorspace',self.combo_colorspaceOut)
-        self.right_form_layout.addRow('Format',self.combo_format)
         self.right_form_layout.addRow('Quality',self.combo_quality)
         self.right_form_layout.addRow('fps',self.combo_fps)
+        self.right_form_layout.addRow('Resolution',self.combo_resolution)
         self.right_form_layout.addRow('Trim Head',self.spn_head)
         self.right_form_layout.addRow('Trim Tail',self.spn_tail)
-        self.right_form_layout.addRow('Overlay Frame Number',self.check_framenum)        
+        self.right_form_layout.addRow('Overlay Frame Number',self.check_framenum)
 
         self.right_folder_layout.addWidget(self.btn_outputFolder)
         self.right_folder_layout.addWidget(self.le_outputFolder)
@@ -122,6 +129,7 @@ class MainWindow(QtWidgets.QWidget):
         self.combo_colorspaceIn.currentTextChanged.connect(partial(self.update_sequence_attribute, 'colorspaceIn', self.combo_quality.currentText()))
         self.combo_colorspaceOut.currentTextChanged.connect(partial(self.update_sequence_attribute, 'colorspaceOut', self.combo_quality.currentText()))
         self.combo_fps.currentTextChanged.connect(partial(self.update_sequence_attribute, 'fps', self.combo_fps.currentText()))
+        self.combo_resolution.currentTextChanged.connect(partial(self.update_sequence_attribute, 'resolution', self.combo_resolution.currentText()))
         self.spn_head.valueChanged.connect(partial(self.update_sequence_attribute, 'head', self.spn_head.value()))
         self.spn_tail.valueChanged.connect(partial(self.update_sequence_attribute, 'tail', self.spn_tail.value()))
         self.check_framenum.stateChanged.connect(partial(self.update_sequence_attribute, 'ovl_framenum', self.check_framenum.isChecked()))
@@ -163,6 +171,7 @@ class MainWindow(QtWidgets.QWidget):
             self.combo_format.setCurrentText(list_item.format)
             self.combo_fps.setCurrentText(list_item.fps)
             self.check_framenum.setChecked(list_item.ovl_framenum)
+            self.combo_resolution.setCurrentText(list_item.resolution)
 
             if len(self.lw_files.selectedItems())==1:
                 self.le_outputname.setDisabled(False)
@@ -183,6 +192,7 @@ class MainWindow(QtWidgets.QWidget):
         self.combo_colorspaceIn.setDisabled(arg)
         self.combo_colorspaceOut.setDisabled(arg)
         self.check_framenum.setDisabled(arg)
+        self.combo_resolution.setDisabled(arg)
             
     def delete_selected_item(self):
         for lw_item in self.lw_files.selectedItems():
@@ -270,6 +280,7 @@ class MainWindow(QtWidgets.QWidget):
                 lw_item.colorspaceIn = 'ACEScg'
                 lw_item.colorspaceOut = 'Output - sRGB'
                 lw_item.ovl_framenum = False
+                lw_item.resolution = 'Original'
 
                 padding_str = f'%0{seq.padding}d'
                 if seq.padding==0:
