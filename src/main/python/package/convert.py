@@ -44,6 +44,9 @@ class ConvertToMovie():
         lut_name = f'{self.colorspaceIn}_{self.colorspaceOut}.csp'
         lut_path = os.path.join(LUT_PATH,lut_name)
         lut_path = self.ffmpegFilter_path(lut_path)
+        ffmpeg_lut_arg = ''
+        if use_lut:
+            ffmpeg_lut_arg = f'lut3d={lut_path},' # include comma, so that we can skip the overlay altogether in the command if needed
 
         font_path = FONT
         font_path = self.ffmpegFilter_path(font_path)
@@ -62,26 +65,19 @@ class ConvertToMovie():
                                         r',' # include comma, so that we can skip the overlay altogether in the command if needed
                                         )
 
-
         # adding black pixel padding for uneven resolutions -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"
         if self.extension == 'mp4':
-            dic_quality = {'High': 18, 'Medium': 23, 'Low': 28}
-            # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
+            dic_quality = {'High': 18, 'Medium': 23, 'Low': 28} # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
             # adding black pixel padding for uneven resolutions
-            if use_lut:
-                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "{ffmpeg_frameOverlay_arg}format=yuv420p,lut3d={lut_path},pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
-            else:
-                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "{ffmpeg_frameOverlay_arg}format=yuv420p,pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
+            ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "{ffmpeg_frameOverlay_arg}{ffmpeg_lut_arg}format=yuv420p,pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
+        
         else:  # prores
-            # -profile:v -> proxy (0) lt (1) standard (2) hq (3)
-            dic_quality = {'High': 2, 'Medium': 1, 'Low': 0}
-            if use_lut:
-                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}"  -vframes {self.framerange} -c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le -vf "lut3d="{lut_path},pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
-            else:
-                ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}"  -vframes {self.framerange} -c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
+            dic_quality = {'High': 2, 'Medium': 1, 'Low': 0} # -profile:v -> proxy (0) lt (1) standard (2) hq (3)
+            ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}"  -vframes {self.framerange} -c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le -vf "{ffmpeg_frameOverlay_arg}{ffmpeg_lut_arg}pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
+                
 
         ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' #.replace('/', '\\')
-        # print(ffmpeg_command)
+        print(ffmpeg_command)
         returned_value = subprocess.call(ffmpeg_command, shell=False)
 
         if not returned_value:  # exit code 0 means successful
