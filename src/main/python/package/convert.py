@@ -18,6 +18,7 @@ class ConvertToMovie():
                 colorspaceIn='None',
                 colorspaceOut='None',
                 overlay_framenum=False,
+                resolution='Original',
                 outputfolder=''
                 ):
         self.fps = float(fps)
@@ -33,26 +34,29 @@ class ConvertToMovie():
         self.colorspaceIn = colorspaceIn
         self.colorspaceOut = colorspaceOut
         self.overlay_framenum = overlay_framenum 
+        self.resolution = resolution
         self.destinationfile = os.path.join(os.path.normpath(self.outputfolder), f'{self.filename}.{self.extension}')
     
-    def to_movie(self):
+    def to_movie(self):  # sourcery skip: assign-if-exp, introduce-default-else
         ffmpegpath = FFMPEG_PATH.replace('/','\\')
         sourcepath = self.sourcepath.replace('/','\\')
         destinationfile = self.destinationfile.replace('/','\\') # testing on a windows 10 OS
 
+        # ffmpeg LUT stuff
         use_lut = self.colorspaceIn != self.colorspaceOut
         lut_name = f'{self.colorspaceIn}_{self.colorspaceOut}.csp'
         lut_path = os.path.join(LUT_PATH,lut_name)
         lut_path = self.ffmpegFilter_path(lut_path)
-        ffmpeg_lut_arg = ''
+        ffmpegArg_lut = ''
         if use_lut:
-            ffmpeg_lut_arg = f'lut3d={lut_path},' # include comma, so that we can skip the overlay altogether in the command if needed
+            ffmpegArg_lut = f'lut3d={lut_path},' # include comma, so that we can skip the lut if not needed
 
+        # ffmpeg drawtext stuff
         font_path = FONT
         font_path = self.ffmpegFilter_path(font_path)
-        ffmpeg_frameOverlay_arg = ''
+        ffmpegArg_frameOverlay = ''
         if self.overlay_framenum:
-            ffmpeg_frameOverlay_arg = (f'drawtext=fontfile={font_path}:'
+            ffmpegArg_frameOverlay = (f'drawtext=fontfile={font_path}:'
                                         r"text='%{frame_num}':"
                                         f'start_number={self.startframe}:'
                                         r'x=(w-tw)/2:'
@@ -62,20 +66,33 @@ class ConvertToMovie():
                                         r'fontsize=ceil(h/20):'
                                         r'box=0:'
                                         r'alpha=.5'
-                                        r',' # include comma, so that we can skip the overlay altogether in the command if needed
+                                        r',' # include comma, so that we can skip the overlay altogether in the command if not needed
                                         )
-
-        # adding black pixel padding for uneven resolutions -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"
-        if self.extension == 'mp4':
-            dic_quality = {'High': 18, 'Medium': 23, 'Low': 28} # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
-            # adding black pixel padding for uneven resolutions
-            ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} -c:v libx264 -crf {dic_quality[self.quality]} -vf "{ffmpeg_frameOverlay_arg}{ffmpeg_lut_arg}format=yuv420p,pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
+            
+        # ffmpeg resizing related stuff
+        dic_res = {'1080p':(1920,1080),'UHD':(3840,2160)}
+        if self.resolution != 'Original':
+            hres = dic_res[self.resolution][0]
+            vres = dic_res[self.resolution][1]
+            ffmpeg_scale_arg = f'scale=(iw*sar)*min({hres}/(iw*sar)\,{vres}/ih):ih*min({hres}/(iw*sar)\,{vres}/ih),' # include comma, so that we can skip in the command if not needed
+            ffmpeg_pad_arg = f'pad={hres}:{vres}:({hres}-iw*min({hres}/iw\,{vres}/ih))/2:({vres}-ih*min({hres}/iw\,{vres}/ih))/2' # not including',' since it's the last arg of the -vf section
+        else:
+            ffmpeg_scale_arg = ''
+            ffmpeg_pad_arg = 'pad=ceil(iw/2)*2:ceil(ih/2)*2'
         
+        # ffmpeg compression related stuff 
+        if self.extension == 'mp4':    
+            dic_quality = {'High': 18, 'Medium': 23, 'Low': 28} # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
+            ffmpegArg_compression1 = f'-c:v libx264 -crf {dic_quality[self.quality]}'
+            ffmpegArg_compression2 = 'format=yuv420p,' # include comma, so that we can skip in the command if not needed
         else:  # prores
             dic_quality = {'High': 2, 'Medium': 1, 'Low': 0} # -profile:v -> proxy (0) lt (1) standard (2) hq (3)
-            ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}"  -vframes {self.framerange} -c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le -vf "{ffmpeg_frameOverlay_arg}{ffmpeg_lut_arg}pad=ceil(iw/2)*2:ceil(ih/2)*2" "{destinationfile}"'
-                
-
+            ffmpegArg_compression1 = f'-c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le'
+            ffmpegArg_compression2 = '' # skipped in prores_ks, to be verified
+            
+        # adding black pixel padding for uneven resolutions -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"
+        ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
+        
         ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' #.replace('/', '\\')
         print(ffmpeg_command)
         returned_value = subprocess.call(ffmpeg_command, shell=False)

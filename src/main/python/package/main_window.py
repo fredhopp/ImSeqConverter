@@ -29,7 +29,8 @@ class MainWindow(QtWidgets.QWidget):
         self.color_blue = QtGui.QColor(237,247,247)
         self.color_green = QtGui.QColor(200,237,172)
 
-        self.le_outputname = QtWidgets.QLineEdit('Output Filename')
+        self.lbl_outputSettings = QtWidgets.QLabel('Output Settings')
+        self.le_outputname = QtWidgets.QLineEdit('Filename')
         self.combo_format = QtWidgets.QComboBox()
         
         self.combo_colorspaceIn = QtWidgets.QComboBox()
@@ -53,6 +54,8 @@ class MainWindow(QtWidgets.QWidget):
         self.lw_files.setAlternatingRowColors(True)
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
 
+
+        self.lbl_outputSettings.setAlignment(QtCore.Qt.AlignCenter)
         self.combo_colorspaceIn.addItem('ACEScg')
         self.combo_colorspaceIn.addItem('Utility - Linear - sRGB')
         self.combo_colorspaceIn.addItem('Output - sRGB')
@@ -93,25 +96,33 @@ class MainWindow(QtWidgets.QWidget):
         self.left_layout = QtWidgets.QGridLayout()        
 
         self.right_layout = QtWidgets.QVBoxLayout()
+        
+        
+        self.right_title_layout = QtWidgets.QHBoxLayout()
         self.right_form_layout = QtWidgets.QFormLayout()
         self.right_folder_layout = QtWidgets.QHBoxLayout()
 
         self.main_layout.addLayout(self.left_layout,0,0,1,1)
         self.main_layout.addLayout(self.right_layout,0,1,1,1)
+        
+        self.right_layout.addLayout(self.right_title_layout)
         self.right_layout.addLayout(self.right_form_layout)
+        self.right_layout.addStretch()
         self.right_layout.addLayout(self.right_folder_layout)
         
     def add_widgets_to_layouts(self):
         self.left_layout.addWidget(self.lw_files, 0, 0, 1, 2)
         self.left_layout.addWidget(self.lbl_dropInfo, 1, 0, 1, 2)
         self.main_layout.addWidget(self.btn_convert, 1, 0, 1, 2)
-
-        self.right_form_layout.addRow('Output Filename',self.le_outputname)
+        
+        self.right_title_layout.addWidget(self.lbl_outputSettings)
+        
+        self.right_form_layout.addRow('Filename',self.le_outputname)
         self.right_form_layout.addRow('Format',self.combo_format)
         self.right_form_layout.addRow('Input Colorspace',self.combo_colorspaceIn)
         self.right_form_layout.addRow('Output Colorspace',self.combo_colorspaceOut)
         self.right_form_layout.addRow('Quality',self.combo_quality)
-        self.right_form_layout.addRow('fps',self.combo_fps)
+        self.right_form_layout.addRow('Fps',self.combo_fps)
         self.right_form_layout.addRow('Resolution',self.combo_resolution)
         self.right_form_layout.addRow('Trim Head',self.spn_head)
         self.right_form_layout.addRow('Trim Tail',self.spn_tail)

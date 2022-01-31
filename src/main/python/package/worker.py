@@ -26,6 +26,7 @@ class Worker(QtCore.QObject):
                                         colorspaceIn=lw_item.colorspaceIn,
                                         colorspaceOut=lw_item.colorspaceOut,
                                         overlay_framenum=lw_item.ovl_framenum,
+                                        resolution=lw_item.resolution,
                                         outputfolder=lw_item.outputfolder
                                         )
                 
