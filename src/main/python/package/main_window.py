@@ -8,7 +8,7 @@ from package.worker import Worker
 from package.file_sequence import SequencesFromFiles
 
 
-class MainWindow(QtWidgets.QWidget):
+class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, resource_dir):
         super().__init__()
         self.resource_dir = resource_dir
@@ -23,6 +23,9 @@ class MainWindow(QtWidgets.QWidget):
         self.setup_connections()
 
     def create_widgets(self):
+        self.central_widget =  QtWidgets.QWidget()               # define central widget
+        self.setCentralWidget(self.central_widget)
+        
         self.lw_files = QtWidgets.QListWidget()
         self.lbl_dropInfo = QtWidgets.QLabel('Drop images on above UI')
         self.btn_convert = QtWidgets.QPushButton('Convert')
@@ -49,11 +52,16 @@ class MainWindow(QtWidgets.QWidget):
         self.le_outputFolder = QtWidgets.QLineEdit('Ouput Folder')
             
     def modify_widgets(self):
+        preference_action = QtGui.QAction( "&Preferences", self)
+        # preference_action.triggered.connect(self.onMyToolBarButtonClick)
+        self.menu = self.menuBar()
+        file_menu = self.menu.addMenu("&File")
+        file_menu.addAction(preference_action)
+        
         self.lbl_dropInfo.setVisible(False)
         self.setAcceptDrops(True)
         self.lw_files.setAlternatingRowColors(True)
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
-
 
         self.lbl_outputSettings.setAlignment(QtCore.Qt.AlignCenter)
         self.combo_colorspaceIn.addItem('ACEScg')
@@ -92,11 +100,11 @@ class MainWindow(QtWidgets.QWidget):
         
     def create_layouts(self):
         self.main_layout = QtWidgets.QGridLayout(self)
+        self.centralWidget().setLayout(self.main_layout)
 
         self.left_layout = QtWidgets.QGridLayout()        
 
-        self.right_layout = QtWidgets.QVBoxLayout()
-        
+        self.right_layout = QtWidgets.QVBoxLayout()        
         
         self.right_title_layout = QtWidgets.QHBoxLayout()
         self.right_form_layout = QtWidgets.QFormLayout()
