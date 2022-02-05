@@ -293,11 +293,12 @@ class MainWindow(QtWidgets.QMainWindow):
         movs = sqff.movies
         seqs.extend(movs)
         
-        lw_item_names = [f'{self.lw_files.item(index).shortname}{self.lw_files.item(index).seqtype}' for index in range(self.lw_files.count())]
+        lw_item_texts = [f'{self.lw_files.item(index).text()}' for index in range(self.lw_files.count())]
          
         for seq in seqs:
-            if f'{seq.shortname}{seq.seqtype}' not in lw_item_names:
-                lw_item = QtWidgets.QListWidgetItem(f'{seq.shortname} {seq.seqtype} ({seq.start}-{seq.end})')
+            lw_item_text = f'{seq.shortname} [{seq.start}-{seq.end}] ({seq.seqtype})'
+            if lw_item_text not in lw_item_texts:
+                lw_item = QtWidgets.QListWidgetItem(lw_item_text)
                 lw_item.setIcon(self.cache_IconUnChecked)
                 lw_item.setBackground(self.color_blue)
                 lw_item.processed = False
