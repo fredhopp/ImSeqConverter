@@ -27,7 +27,8 @@ class Worker(QtCore.QObject):
                                         colorspaceOut=lw_item.colorspaceOut,
                                         overlay_framenum=lw_item.ovl_framenum,
                                         resolution=lw_item.resolution,
-                                        outputfolder=lw_item.outputfolder
+                                        outputfolder=lw_item.outputfolder,
+                                        seqtype=lw_item.seqtype
                                         )
                 
                 returned_value = movie.to_movie()

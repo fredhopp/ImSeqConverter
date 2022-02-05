@@ -102,7 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_layout = QtWidgets.QGridLayout(self)
         self.centralWidget().setLayout(self.main_layout)
 
-        self.left_layout = QtWidgets.QGridLayout()        
+        self.left_layout = QtWidgets.QVBoxLayout()        
 
         self.right_layout = QtWidgets.QVBoxLayout()        
         
@@ -112,15 +112,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.main_layout.addLayout(self.left_layout,0,0,1,1)
         self.main_layout.addLayout(self.right_layout,0,1,1,1)
-        
+                
         self.right_layout.addLayout(self.right_title_layout)
         self.right_layout.addLayout(self.right_form_layout)
         self.right_layout.addStretch()
         self.right_layout.addLayout(self.right_folder_layout)
         
     def add_widgets_to_layouts(self):
-        self.left_layout.addWidget(self.lw_files, 0, 0, 1, 2)
-        self.left_layout.addWidget(self.lbl_dropInfo, 1, 0, 1, 2)
+        self.left_layout.addWidget(self.lw_files)
+        self.left_layout.addWidget(self.lbl_dropInfo)
         self.main_layout.addWidget(self.btn_convert, 1, 0, 1, 2)
         
         self.right_title_layout.addWidget(self.lbl_outputSettings)
@@ -161,8 +161,11 @@ class MainWindow(QtWidgets.QMainWindow):
         defaultfolder = self.le_outputFolder.text()
         if not os.path.isdir(defaultfolder):
             defaultfolder = os.path.expanduser('~')
-        folder = QtWidgets.QFileDialog.getExistingDirectory(dir=defaultfolder, caption='Output Folder',options=QtWidgets.QFileDialog.ShowDirsOnly)
-        if folder:
+        if folder := QtWidgets.QFileDialog.getExistingDirectory(
+                                                                dir=defaultfolder,
+                                                                caption='Output Folder',
+                                                                options=QtWidgets.QFileDialog.ShowDirsOnly,
+                                                            ):
             self.le_outputFolder.setText(folder)
 
     def update_sequence_attribute(self, attribute, connect_item, attrib_value ):
@@ -170,9 +173,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if list_items:
             for list_item in list_items:
                 if isinstance(attrib_value, str) and (
-                    not attrib_value.startswith('"')
-                    or not attrib_value.endswith('"')
-                    ): 
+                                                    not attrib_value.startswith('"')
+                                                    or not attrib_value.endswith('"')
+                                                    ): 
                     attrib_value = f'"{attrib_value}"'
                 command = f'list_item.{attribute} = {attrib_value}'
                 exec(command)
@@ -195,23 +198,33 @@ class MainWindow(QtWidgets.QMainWindow):
             if len(self.lw_files.selectedItems())==1:
                 self.le_outputname.setDisabled(False)
                 self.le_outputname.setText(list_item.outputname)
+                if self.lw_files.selectedItems()[-1].seqtype == 'MOV':
+                    self.spn_head.setDisabled(True)
+                    self.spn_tail.setDisabled(True)
+                    self.combo_fps.setDisabled(True)
             else:
                 self.le_outputname.setDisabled(True)
+                self.spn_head.setDisabled(False)
+                self.spn_tail.setDisabled(False)
+                self.combo_fps.setDisabled(False)
         else:
             self.enable_disable_attribute_widgets(True)
 
     def enable_disable_attribute_widgets(self, arg):
         self.le_outputname.setDisabled(arg)
         self.le_outputFolder.setDisabled(arg)
-        self.spn_head.setDisabled(arg)
-        self.spn_tail.setDisabled(arg)
+        
         self.combo_quality.setDisabled(arg)
         self.combo_format.setDisabled(arg)
-        self.combo_fps.setDisabled(arg)
+        
         self.combo_colorspaceIn.setDisabled(arg)
         self.combo_colorspaceOut.setDisabled(arg)
         self.check_framenum.setDisabled(arg)
         self.combo_resolution.setDisabled(arg)
+
+        self.spn_head.setDisabled(arg)
+        self.spn_tail.setDisabled(arg)
+        self.combo_fps.setDisabled(arg)
             
     def delete_selected_item(self):
         for lw_item in self.lw_files.selectedItems():
@@ -275,12 +288,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbl_dropInfo.setVisible(False)
 
     def add_sequences(self, file_list):
-        seqs = SequencesFromFiles(filepath_list=file_list).sequences
-        items = [self.lw_files.item(index).shortname for index in range(self.lw_files.count())]
+        sqff = SequencesFromFiles(filepath_list=file_list)
+        seqs = sqff.sequences
+        movs = sqff.movies
+        seqs.extend(movs)
+        
+        lw_item_names = [f'{self.lw_files.item(index).shortname}{self.lw_files.item(index).seqtype}' for index in range(self.lw_files.count())]
          
         for seq in seqs:
-            if seq.shortname not in items:
-                lw_item = QtWidgets.QListWidgetItem(f'{seq.shortname} ({seq.start}-{seq.end})')
+            if f'{seq.shortname}{seq.seqtype}' not in lw_item_names:
+                lw_item = QtWidgets.QListWidgetItem(f'{seq.shortname} {seq.seqtype} ({seq.start}-{seq.end})')
                 lw_item.setIcon(self.cache_IconUnChecked)
                 lw_item.setBackground(self.color_blue)
                 lw_item.processed = False
@@ -300,11 +317,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 lw_item.colorspaceOut = 'Output - sRGB'
                 lw_item.ovl_framenum = False
                 lw_item.resolution = 'Original'
-
-                padding_str = f'%0{seq.padding}d'
-                if seq.padding==0:
-                    padding_str = '%d'
-                lw_item.sourcepath = f'{seq.head}{padding_str}{seq.tail}'
+                lw_item.seqtype = seq.seqtype
+                
+                if lw_item.seqtype == 'IMG':
+                    padding_str = f'%0{seq.padding}d'
+                    if seq.padding==0:
+                        padding_str = '%d'
+                    lw_item.sourcepath = f'{seq.head}{padding_str}{seq.tail}'
+                else: # lw_item.seqtype == 'MOV':
+                    lw_item.sourcepath = seq.sourcepath
 
     @cached_property
     def cache_IconChecked(self):

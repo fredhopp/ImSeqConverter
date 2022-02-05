@@ -19,7 +19,8 @@ class ConvertToMovie():
                 colorspaceOut='None',
                 overlay_framenum=False,
                 resolution='Original',
-                outputfolder=''
+                outputfolder='',
+                seqtype='IMG'
                 ):
         self.fps = float(fps)
         self.sourcepath = sourcepath
@@ -36,6 +37,7 @@ class ConvertToMovie():
         self.overlay_framenum = overlay_framenum 
         self.resolution = resolution
         self.destinationfile = os.path.join(os.path.normpath(self.outputfolder), f'{self.filename}.{self.extension}')
+        self.seqtype = seqtype
     
     def to_movie(self):  # sourcery skip: assign-if-exp, introduce-default-else
         ffmpegpath = FFMPEG_PATH.replace('/','\\')
@@ -78,7 +80,8 @@ class ConvertToMovie():
             ffmpeg_pad_arg = f'pad={hres}:{vres}:({hres}-iw*min({hres}/iw\,{vres}/ih))/2:({vres}-ih*min({hres}/iw\,{vres}/ih))/2' # not including',' since it's the last arg of the -vf section
         else:
             ffmpeg_scale_arg = ''
-            ffmpeg_pad_arg = 'pad=ceil(iw/2)*2:ceil(ih/2)*2'
+            ffmpeg_pad_arg = 'pad=ceil(iw/2)*2:ceil(ih/2)*2' # adding black pixel padding for uneven resolutions -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"
+
         
         # ffmpeg compression related stuff 
         if self.extension == 'mp4':    
@@ -90,11 +93,11 @@ class ConvertToMovie():
             ffmpegArg_compression1 = f'-c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le'
             ffmpegArg_compression2 = '' # skipped in prores_ks, to be verified
             
-        # adding black pixel padding for uneven resolutions -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"
         ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
-        
+        if self.seqtype == 'MOV':
+            ffmpeg_args = f'-y -i "{sourcepath}" {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
+
         ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' #.replace('/', '\\')
-        print(ffmpeg_command)
         returned_value = subprocess.call(ffmpeg_command, shell=False)
 
         if not returned_value:  # exit code 0 means successful

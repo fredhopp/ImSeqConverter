@@ -1,10 +1,36 @@
 # import collections
 import os
 import glob
+import subprocess
 
 import clique
+from package.constants import FFPROBE_PATH
 
+class Movie():
+    def __init__(self, filepath):
+        ffprobe_path = FFPROBE_PATH.replace('/','\\')        
+        filepath = filepath.replace('/','\\')
+        
+        ffprobe_seconds_cmd = f'{ffprobe_path} -v quiet -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 "{filepath}"'
+        
+        process_seconds = subprocess.Popen(ffprobe_seconds_cmd, shell=False, stdout=subprocess.PIPE)
+        out, err = process_seconds.communicate()
+        seconds = float(str(out).split("'")[1].split('\\')[0])
+        
+        ffprobe_fps_command = f'{ffprobe_path} -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate {filepath}'
+        process_fps = subprocess.Popen(ffprobe_fps_command, shell=False, stdout=subprocess.PIPE)
+        out, err = process_fps.communicate()
+        fps = str(out).split("'")[1].split('\\')[0]
+        fps = float(fps.split('/')[0]) / float(fps.split('/')[1])
+        
+        self.start = 1
+        self.end = int(seconds * fps)
+        self.shortname = os.path.basename(filepath)[:-4]
+        self.folder = os.path.dirname(filepath).replace('\\','/')
+        self.sourcepath = filepath
+        self.seqtype = 'MOV'
 
+       
 class SequencesFromFiles():
     '''
     Returns a list of clique collections from a list of filepath in a common folder representing the file sequence these files are part of
@@ -34,6 +60,13 @@ class SequencesFromFiles():
                 if remainder_item.startswith(dir_collection.head.replace("\\","/")) and remainder_item not in dir_remainder:
                     self.add_properties(dir_collection)
                     self.selected_collections.append(dir_collection)
+                
+        self.movs = []
+        self.moviePath_list = [file for file in remainder if file.endswith('.mov')]
+        if self.moviePath_list:
+            for moviesPath in self.moviePath_list:
+                movie = Movie(moviesPath)
+                self.movs.append(movie)                
                     
     def add_properties(self, collection):
         collection.start = str(collection).split()[1].replace('[','').replace(']','').split('-')[0]
@@ -45,10 +78,15 @@ class SequencesFromFiles():
             shortname = shortname[:-1]
         collection.shortname = shortname
         collection.folder = folder
+        collection.seqtype = 'IMG'
     
     @property
     def sequences(self):
         return self.selected_collections
+    
+    @property
+    def movies(self):
+        return self.movs
 
 if __name__=='__main__':
     filepath_list = [r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\hyq010_All_bty_v018.1001.jpg',
