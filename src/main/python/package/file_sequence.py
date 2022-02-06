@@ -6,7 +6,7 @@ import json
 
 import clique
      
-def find_ffprobe():
+def find_ffprobe():  # sourcery skip: merge-nested-ifs
     user_dir = os.path.expanduser('~')
     pref_dir = os.path.join(user_dir,'.ImageSequenceConverter')
     pref_file = os.path.join(pref_dir,'preferences.json')
@@ -53,6 +53,7 @@ class Movie():
         self.folder = os.path.dirname(filepath).replace('\\','/')
         self.sourcepath = filepath
         self.seqtype = 'MOV'
+        self.fps = fps
  
 class SequencesFromFiles():
     '''
@@ -63,7 +64,7 @@ class SequencesFromFiles():
         self.filepath_list = filepath_list
         self.return_sequences()
                         
-    def return_sequences(self):
+    def return_sequences(self):  # sourcery skip: extract-method
         imSequence_extensions = ['jpg','jpeg','png','tif','tiff','exr','dpx','tga']
         movie_extensions = ['mov','avi','mkv','mp4']
         imageFilePath_list = []

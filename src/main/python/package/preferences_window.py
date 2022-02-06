@@ -2,7 +2,7 @@ import os
 import json
 
 from functools import partial
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 
 class PreferenceWindow(QtWidgets.QWidget):
     def __init__(self):
@@ -21,8 +21,7 @@ class PreferenceWindow(QtWidgets.QWidget):
         
     def create_widgets(self):
         self.lbl_ffmpeg_link_description = QtWidgets.QLabel('ffmpeg download link:')
-        self.lbl_ffmpeg_link = QtWidgets.QLabel('https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z')
-        self.bt_ffmpeg_website = QtWidgets.QPushButton('Copy Download Link')
+        self.lbl_ffmpeg_link = QtWidgets.QLabel()
         
         self.lbl_ffmpegDir = QtWidgets.QLabel('ffmpeg folder:')
         self.btn_ffmpegDir = QtWidgets.QPushButton()
@@ -40,20 +39,23 @@ class PreferenceWindow(QtWidgets.QWidget):
         self.btn_save = QtWidgets.QPushButton('Save Preferences')
     
     def modify_widgets(self):
+        urlLink="<a href='https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z'>Download ffmpeg</a>" 
+        self.lbl_ffmpeg_link.setText(urlLink)
+        self.lbl_ffmpeg_link.setAlignment(QtCore.Qt.AlignCenter)
+        self.lbl_ffmpeg_link.setOpenExternalLinks(True)
         self.btn_ffmpegDir.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogOpenButton')))
         self.btn_font.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogOpenButton')))
         self.btn_lutDir.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogOpenButton')))
 
     def create_layouts(self):
         self.main_layout = QtWidgets.QVBoxLayout(self)        
-        self.ffmpegUrl_layout = QtWidgets.QHBoxLayout()
         self.ffmpegExe_layout = QtWidgets.QHBoxLayout()           
         self.font_layout = QtWidgets.QHBoxLayout()
         self.lut_layout = QtWidgets.QHBoxLayout()
         self.savecancel_layout = QtWidgets.QHBoxLayout()
 
     def add_widgets_to_layouts(self):
-        self.main_layout.addLayout(self.ffmpegUrl_layout)
+        self.main_layout.addWidget(self.lbl_ffmpeg_link)
         self.main_layout.addStretch()
         
         self.main_layout.addWidget(self.lbl_ffmpegDir)
@@ -68,14 +70,9 @@ class PreferenceWindow(QtWidgets.QWidget):
         self.main_layout.addStretch()
         self.main_layout.addLayout(self.savecancel_layout)
         
-        self.ffmpegUrl_layout.addWidget(self.lbl_ffmpeg_link_description)
-        self.ffmpegUrl_layout.addStretch()
-        self.ffmpegUrl_layout.addWidget(self.lbl_ffmpeg_link)
-        self.ffmpegUrl_layout.addStretch()
-        self.ffmpegUrl_layout.addWidget(self.bt_ffmpeg_website)
-        
         self.ffmpegExe_layout.addWidget(self.le_ffmpegDir)
-        self.ffmpegExe_layout.addWidget(self.btn_ffmpegDir)
+        self.ffmpegExe_layout.addWidget(self.le_ffmpegDir)
+
         
         self.font_layout.addWidget(self.le_font)
         self.font_layout.addWidget(self.btn_font)
@@ -88,16 +85,11 @@ class PreferenceWindow(QtWidgets.QWidget):
         self.savecancel_layout.addWidget(self.btn_save)
 
     def setup_connections(self):
-        self.bt_ffmpeg_website.clicked.connect(partial(self.copy_string,'https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z'))
         self.btn_ffmpegDir.clicked.connect(self.pick_ffmpeg_folder)
         self.btn_font.clicked.connect(partial(self.pick_font))
         self.btn_lutDir.clicked.connect(partial(self.pick_lut_folder))
         self.btn_save.clicked.connect(partial(self.save_preferences))
         self.btn_cancel.clicked.connect(partial(self.close_preference_window))
-
-    def copy_string(self, str):
-        clipboard = QtWidgets.QApplication.clipboard()
-        clipboard.setText(str)
         
     def pick_ffmpeg_folder(self):
         default_folder = self.le_ffmpegDir.text()
@@ -129,7 +121,7 @@ class PreferenceWindow(QtWidgets.QWidget):
         if font_file := QtWidgets.QFileDialog.getOpenFileName(
                                                                 dir=default_folder,
                                                                 caption='Font',
-                                                                filter='Fonts (*.ttf)',
+                                                                filter='Fonts (*.ttf *.TTF)',
                                                             ):
             self.le_font.setText(font_file[0].replace('\\','/'))
             

@@ -1,6 +1,7 @@
 import os
 import subprocess
 import json
+import math
 
 class ConvertToMovie():
     def __init__(self, 
@@ -22,19 +23,18 @@ class ConvertToMovie():
         
         user_dir = os.path.expanduser('~')
         pref_dir = os.path.join(user_dir,'.ImageSequenceConverter')
-        pref_file = os.path.join(pref_dir,'preferences')
+        pref_file = os.path.join(pref_dir,'preferences.json')
         if os.path.exists(pref_file):
             with open(pref_file, 'r') as pref_file:
                 json_object = json.load(pref_file)
                 for key, value in json_object.items():
                     if key == 'ffmpeg_dir':
-                        self.FFMPEG_PATH = os.path.join(value,'ffmpeg.exe').replace('\\','/')
-                    if key == 'font_file':
-                        self.FONT_PATH = value.replace('\\','/')
-                    if key == 'lut_dir':
-                        self.LUT_PATH = value.replace('\\','/')
-        
-        
+                        self.FFMPEG_PATH = os.path.join(value,'ffmpeg.exe')
+                    elif key == 'font_file':
+                        self.FONT_PATH = value
+                    elif key == 'lut_dir':
+                        self.LUT_PATH = value
+
         self.fps = float(fps)
         self.sourcepath = sourcepath
         self.outputfolder = outputfolder
@@ -47,12 +47,13 @@ class ConvertToMovie():
         self.framerange = framerange
         self.colorspaceIn = colorspaceIn
         self.colorspaceOut = colorspaceOut
-        self.overlay_framenum = overlay_framenum 
+        self.overlay_framenum = overlay_framenum
         self.resolution = resolution
         self.destinationfile = os.path.join(os.path.normpath(self.outputfolder), f'{self.filename}.{self.extension}')
         self.seqtype = seqtype
+
     
-    def to_movie(self):  # sourcery skip: assign-if-exp, introduce-default-else
+    def to_movie(self):   # sourcery skip: assign-if-exp, introduce-default-else
         ffmpegpath = self.FFMPEG_PATH.replace('/','\\')
         sourcepath = self.sourcepath.replace('/','\\')
         destinationfile = self.destinationfile.replace('/','\\') # testing on a windows 10 OS
@@ -105,13 +106,15 @@ class ConvertToMovie():
             dic_quality = {'High': 2, 'Medium': 1, 'Low': 0} # -profile:v -> proxy (0) lt (1) standard (2) hq (3)
             ffmpegArg_compression1 = f'-c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le'
             ffmpegArg_compression2 = '' # skipped in prores_ks, to be verified
-            
+
         ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
         if self.seqtype == 'MOV':
-            ffmpeg_args = f'-y -i "{sourcepath}" {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
-            # ffmpeg -i movie.mp4 -ss 00:00:03 -t 00:00:08 -async 1 -strict -2 cut.mp4
+            start_timecode = self.startframe/self.fps
+            end_timecode = self.framerange/self.fps            
+            ffmpegArg_timecode = f'-ss {start_timecode} -t {end_timecode} -async 1 -strict -2'            
+            ffmpeg_args = f'-y {ffmpegArg_timecode} -i "{sourcepath}" {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
 
-        ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' #.replace('/', '\\')
+        ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' 
         returned_value = subprocess.call(ffmpeg_command, shell=False)
 
         if not returned_value:  # exit code 0 means successful

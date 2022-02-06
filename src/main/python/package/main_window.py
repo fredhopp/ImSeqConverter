@@ -158,10 +158,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.le_outputFolder.textChanged.connect(partial(self.update_sequence_attribute, 'outputfolder', self.le_outputFolder.text()))
 
         self.btn_convert.clicked.connect(self.convert_sequences)
-
-
-
-    
+   
     def pick_folder(self):
         defaultfolder = self.le_outputFolder.text()
         if not os.path.isdir(defaultfolder):
@@ -179,6 +176,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pref_window.show()
 
     def update_sequence_attribute(self, attribute, connect_item, attrib_value ):
+        # sourcery skip: use-named-expression
         list_items = self.lw_files.selectedItems()
         if list_items:
             for list_item in list_items:
@@ -209,8 +207,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.le_outputname.setDisabled(False)
                 self.le_outputname.setText(list_item.outputname)
                 if self.lw_files.selectedItems()[-1].seqtype == 'MOV':
-                    self.spn_head.setDisabled(True)
-                    self.spn_tail.setDisabled(True)
+                    # self.spn_head.setDisabled(True)
+                    # self.spn_tail.setDisabled(True)
                     self.combo_fps.setDisabled(True)
             else:
                 self.le_outputname.setDisabled(True)
@@ -322,7 +320,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 lw_item.head = 0
                 lw_item.tail = 0
                 lw_item.format = 'mp4'
-                lw_item.fps = '23.976'
+                
                 lw_item.quality = 'High'
                 lw_item.colorspaceIn = 'ACEScg'
                 lw_item.colorspaceOut = 'Output - sRGB'
@@ -335,8 +333,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     if seq.padding==0:
                         padding_str = '%d'
                     lw_item.sourcepath = f'{seq.head}{padding_str}{seq.tail}'
+                    lw_item.fps = '23.976'
                 else: # lw_item.seqtype == 'MOV':
                     lw_item.sourcepath = seq.sourcepath
+                    lw_item.fps = str(seq.fps)
 
     @cached_property
     def cache_IconChecked(self):
