@@ -14,7 +14,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.resource_dir = resource_dir
         self.pref_window = None
-        self.setWindowTitle('Movie Converter')
+        self.setWindowTitle('Image Sequence Converter')
         self.setup_ui()
 
     def setup_ui(self):
@@ -100,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_properties_display()
         
     def create_layouts(self):
-        self.main_layout = QtWidgets.QGridLayout(self)
+        self.main_layout = QtWidgets.QGridLayout()
         self.centralWidget().setLayout(self.main_layout)
 
         self.left_layout = QtWidgets.QVBoxLayout()
