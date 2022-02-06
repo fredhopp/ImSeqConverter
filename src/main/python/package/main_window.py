@@ -6,12 +6,14 @@ from PySide6 import QtGui, QtWidgets, QtCore
 
 from package.worker import Worker
 from package.file_sequence import SequencesFromFiles
+from package.preferences_window import PreferenceWindow
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, resource_dir):
         super().__init__()
         self.resource_dir = resource_dir
+        self.pref_window = None
         self.setWindowTitle('Movie Converter')
         self.setup_ui()
 
@@ -52,11 +54,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.le_outputFolder = QtWidgets.QLineEdit('Ouput Folder')
             
     def modify_widgets(self):
-        preference_action = QtGui.QAction( "&Preferences", self)
-        # preference_action.triggered.connect(self.onMyToolBarButtonClick)
+        self.preference_action = QtGui.QAction( "&Open", self)
         self.menu = self.menuBar()
-        file_menu = self.menu.addMenu("&File")
-        file_menu.addAction(preference_action)
+        file_menu = self.menu.addMenu("&Preferences")
+        file_menu.addAction(self.preference_action)
         
         self.lbl_dropInfo.setVisible(False)
         self.setAcceptDrops(True)
@@ -102,14 +103,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_layout = QtWidgets.QGridLayout(self)
         self.centralWidget().setLayout(self.main_layout)
 
-        self.left_layout = QtWidgets.QVBoxLayout()        
-
+        self.left_layout = QtWidgets.QVBoxLayout()
         self.right_layout = QtWidgets.QVBoxLayout()        
         
         self.right_title_layout = QtWidgets.QHBoxLayout()
         self.right_form_layout = QtWidgets.QFormLayout()
         self.right_folder_layout = QtWidgets.QHBoxLayout()
-
+        
+    def add_widgets_to_layouts(self):
         self.main_layout.addLayout(self.left_layout,0,0,1,1)
         self.main_layout.addLayout(self.right_layout,0,1,1,1)
                 
@@ -118,9 +119,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_layout.addStretch()
         self.right_layout.addLayout(self.right_folder_layout)
         
-    def add_widgets_to_layouts(self):
         self.left_layout.addWidget(self.lw_files)
         self.left_layout.addWidget(self.lbl_dropInfo)
+        
         self.main_layout.addWidget(self.btn_convert, 1, 0, 1, 2)
         
         self.right_title_layout.addWidget(self.lbl_outputSettings)
@@ -141,6 +142,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def setup_connections(self):
         QtGui.QShortcut(QtGui.QKeySequence('Delete'), self.lw_files, self.delete_selected_item)
+        self.preference_action.triggered.connect(self.open_preferences)
         self.lw_files.itemSelectionChanged.connect(self.update_properties_display)
         self.le_outputname.textChanged.connect(partial(self.update_sequence_attribute, 'outputname', self.le_outputname.text()))
         self.combo_format.currentTextChanged.connect(partial(self.update_sequence_attribute, 'format', self.combo_format.currentText()))
@@ -156,6 +158,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.le_outputFolder.textChanged.connect(partial(self.update_sequence_attribute, 'outputfolder', self.le_outputFolder.text()))
 
         self.btn_convert.clicked.connect(self.convert_sequences)
+
+
+
     
     def pick_folder(self):
         defaultfolder = self.le_outputFolder.text()
@@ -167,6 +172,11 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                 options=QtWidgets.QFileDialog.ShowDirsOnly,
                                                             ):
             self.le_outputFolder.setText(folder)
+
+    def open_preferences(self, checked):
+        if self.pref_window is None:
+            self.pref_window = PreferenceWindow()
+        self.pref_window.show()
 
     def update_sequence_attribute(self, attribute, connect_item, attrib_value ):
         list_items = self.lw_files.selectedItems()

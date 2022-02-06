@@ -2,13 +2,30 @@
 import os
 import glob
 import subprocess
+import json
 
 import clique
-from package.constants import FFPROBE_PATH
+     
+def find_ffprobe():
+    user_dir = os.path.expanduser('~')
+    pref_dir = os.path.join(user_dir,'.ImageSequenceConverter')
+    pref_file = os.path.join(pref_dir,'preferences.json')
+    
+    FFPROBE_PATH = None
+    if os.path.exists(pref_file):
+        with open(pref_file, 'r') as pref_file:
+            json_object = json.load(pref_file)
+            for key, value in json_object.items():
+                if key == 'ffmpeg_dir':
+                    FFPROBE_PATH = os.path.join(value,'ffprobe.exe').replace('/','\\')
+    if FFPROBE_PATH:
+        if os.path.exists(FFPROBE_PATH) and FFPROBE_PATH.endswith('ffprobe.exe'):
+            return FFPROBE_PATH
+
 
 class Movie():
     def __init__(self, filepath):
-        ffprobe_path = FFPROBE_PATH.replace('/','\\')      
+        ffprobe_path = find_ffprobe()   
         filepath = filepath.replace('/','\\')
         
         ffprobe_seconds_cmd = (f'{ffprobe_path} -v quiet -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 ' 
@@ -36,8 +53,7 @@ class Movie():
         self.folder = os.path.dirname(filepath).replace('\\','/')
         self.sourcepath = filepath
         self.seqtype = 'MOV'
-
-       
+ 
 class SequencesFromFiles():
     '''
     Returns a list of clique collections from a list of filepath in a common folder representing the file sequence these files are part of
@@ -46,7 +62,7 @@ class SequencesFromFiles():
     def __init__(self, filepath_list):
         self.filepath_list = filepath_list
         self.return_sequences()
-
+                        
     def return_sequences(self):
         imSequence_extensions = ['jpg','jpeg','png','tif','tiff','exr','dpx','tga']
         movie_extensions = ['mov','avi','mkv','mp4']
@@ -108,19 +124,3 @@ class SequencesFromFiles():
     @property
     def movies(self):
         return self.movs
-
-if __name__=='__main__':
-    filepath_list = [r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\hyq010_All_bty_v018.1001.jpg',
-                     r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\hyq010_All_bty_v018.1002.jpg',
-                     r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\hyq010_All_bty_v018.1008.jpg',
-                    #  r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\own470_l1_lin_v001.1016.jpg',
-                    #  r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\own470_l1_lin_v001.1017.jpg',
-                    #  r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\own470_l1_lin_v001.1040.jpg',
-                     r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\own470_l1_lin_v001.10.jpg',
-                     r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\pinup.jpg',
-                     r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\dev010_lin_l1.1008.jpg',
-                     r'Z:\jobs\RD_210926\Data\research\mp4Converter\apps\fusion\renders\hyq010_All_bty\v018\dev010_lin_l1.1022.jpg',]
-                     
-    sequences = SequencesFromFiles(filepath_list=filepath_list).sequences
-    for seq in sequences:
-        print(seq)

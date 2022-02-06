@@ -1,10 +1,6 @@
 import os
 import subprocess
-# import asyncio
-# from ffmpeg import FFmpeg
-
-from package.constants import FFMPEG_PATH, LUT_PATH, FONT
-# from constants import FFMPEG_PATH # use for __main__ execution
+import json
 
 class ConvertToMovie():
     def __init__(self, 
@@ -22,6 +18,23 @@ class ConvertToMovie():
                 outputfolder='',
                 seqtype='IMG'
                 ):
+        
+        
+        user_dir = os.path.expanduser('~')
+        pref_dir = os.path.join(user_dir,'.ImageSequenceConverter')
+        pref_file = os.path.join(pref_dir,'preferences')
+        if os.path.exists(pref_file):
+            with open(pref_file, 'r') as pref_file:
+                json_object = json.load(pref_file)
+                for key, value in json_object.items():
+                    if key == 'ffmpeg_dir':
+                        self.FFMPEG_PATH = os.path.join(value,'ffmpeg.exe').replace('\\','/')
+                    if key == 'font_file':
+                        self.FONT_PATH = value.replace('\\','/')
+                    if key == 'lut_dir':
+                        self.LUT_PATH = value.replace('\\','/')
+        
+        
         self.fps = float(fps)
         self.sourcepath = sourcepath
         self.outputfolder = outputfolder
@@ -40,21 +53,21 @@ class ConvertToMovie():
         self.seqtype = seqtype
     
     def to_movie(self):  # sourcery skip: assign-if-exp, introduce-default-else
-        ffmpegpath = FFMPEG_PATH.replace('/','\\')
+        ffmpegpath = self.FFMPEG_PATH.replace('/','\\')
         sourcepath = self.sourcepath.replace('/','\\')
         destinationfile = self.destinationfile.replace('/','\\') # testing on a windows 10 OS
 
         # ffmpeg LUT stuff
         use_lut = self.colorspaceIn != self.colorspaceOut
         lut_name = f'{self.colorspaceIn}_{self.colorspaceOut}.csp'
-        lut_path = os.path.join(LUT_PATH,lut_name)
+        lut_path = os.path.join(self.LUT_PATH,lut_name)
         lut_path = self.ffmpegFilter_path(lut_path)
         ffmpegArg_lut = ''
         if use_lut:
             ffmpegArg_lut = f'lut3d={lut_path},' # include comma, so that we can skip the lut if not needed
 
         # ffmpeg drawtext stuff
-        font_path = FONT
+        font_path = self.FONT_PATH
         font_path = self.ffmpegFilter_path(font_path)
         ffmpegArg_frameOverlay = ''
         if self.overlay_framenum:
@@ -96,6 +109,7 @@ class ConvertToMovie():
         ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
         if self.seqtype == 'MOV':
             ffmpeg_args = f'-y -i "{sourcepath}" {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
+            # ffmpeg -i movie.mp4 -ss 00:00:03 -t 00:00:08 -async 1 -strict -2 cut.mp4
 
         ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' #.replace('/', '\\')
         returned_value = subprocess.call(ffmpeg_command, shell=False)
@@ -112,14 +126,4 @@ class ConvertToMovie():
         return path
         
 
-if __name__=='__main__':
-    i = ConvertToMovie(sourcepath='Z:/jobs/airforce_210419/Data/own/own470/publish/images/plates/own470_l1_lin/v001/own470_l1_lin_v001.%04d.exr',
-                        filename='test',
-                        format='mp4',
-                        fps=23.976,
-                        startframe = 1001,
-                        framerange = 20,
-                        outputfolder = 'C:/Users/fredhopp/Desktop/',
-                        )
-    i.to_movie()
     
