@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 
 from functools import partial
 from PySide6 import QtWidgets, QtCore
@@ -71,8 +72,7 @@ class PreferenceWindow(QtWidgets.QWidget):
         self.main_layout.addLayout(self.savecancel_layout)
         
         self.ffmpegExe_layout.addWidget(self.le_ffmpegDir)
-        self.ffmpegExe_layout.addWidget(self.le_ffmpegDir)
-
+        self.ffmpegExe_layout.addWidget(self.btn_ffmpegDir)
         
         self.font_layout.addWidget(self.le_font)
         self.font_layout.addWidget(self.btn_font)
@@ -94,7 +94,7 @@ class PreferenceWindow(QtWidgets.QWidget):
     def pick_ffmpeg_folder(self):
         default_folder = self.le_ffmpegDir.text()
         if not os.path.isdir(default_folder):
-            default_folder = os.path.expanduser('~')
+            default_folder = self.default_path()
         if folder := QtWidgets.QFileDialog.getExistingDirectory(
                                                                 dir=default_folder,
                                                                 caption='ffmpeg Folder',
@@ -105,7 +105,7 @@ class PreferenceWindow(QtWidgets.QWidget):
     def pick_lut_folder(self):
         default_folder = self.le_lutDir.text()
         if not os.path.isdir(default_folder):
-            default_folder = os.path.expanduser('~')
+            default_folder = self.default_path()
         if folder := QtWidgets.QFileDialog.getExistingDirectory(
                                                                 dir=default_folder,
                                                                 caption='Colorspace Luts Folder',
@@ -117,17 +117,18 @@ class PreferenceWindow(QtWidgets.QWidget):
         default_file = self.le_font.text()
         default_folder = os.path.dirname(default_file)
         if not os.path.exists(default_folder):
-            default_folder = os.path.expanduser('~')
-        if font_file := QtWidgets.QFileDialog.getOpenFileName(
+            default_folder = self.default_path()
+        font_file = QtWidgets.QFileDialog.getOpenFileName(
                                                                 dir=default_folder,
                                                                 caption='Font',
                                                                 filter='Fonts (*.ttf *.TTF)',
-                                                            ):
+                                                            ) # return a tuple ('',''), not None, if window cancelled -> if font_file[0]: 
+        if font_file[0]: 
             self.le_font.setText(font_file[0].replace('\\','/'))
-            
+        
     def load_preferences(self):
-        user_dir = os.path.expanduser('~')
-        pref_dir = os.path.join(user_dir,'.ImageSequenceConverter')
+        exe_dir = self.default_path()
+        pref_dir = os.path.join(exe_dir,'preferences')
         pref_file = os.path.join(pref_dir,'preferences.json')
 
         if os.path.exists(pref_file):
@@ -142,8 +143,8 @@ class PreferenceWindow(QtWidgets.QWidget):
                         self.le_lutDir.setText(value.replace('\\','/'))
                         
     def save_preferences(self):
-        user_dir = os.path.expanduser('~')
-        pref_dir = os.path.join(user_dir,'.ImageSequenceConverter')
+        exe_dir = self.default_path()
+        pref_dir = os.path.join(exe_dir,'preferences')
         if not os.path.exists(pref_dir):
             os.mkdir(pref_dir)
         pref_file = os.path.join(pref_dir,'preferences.json')
@@ -170,3 +171,9 @@ class PreferenceWindow(QtWidgets.QWidget):
             
     def close_preference_window(self):
         self.close()
+        
+    def default_path(self):
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            return os.path.dirname(sys.executable)
+        else:
+            return os.path.dirname(__file__)
