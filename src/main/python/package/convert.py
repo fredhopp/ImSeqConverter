@@ -115,6 +115,10 @@ class ConvertToMovie():
 
         ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' 
         returned_value = subprocess.call(ffmpeg_command, shell=False)
+        # process_fps = subprocess.Popen(ffprobe_fps_command, shell=False, stdout=subprocess.PIPE)
+        # out, err = process_fps.communicate()
+        # fps = str(out).split("'")[1].split('\\')[0]
+        # fps = float(fps.split('/')[0]) / float(fps.split('/')[1])
 
         if not returned_value:  # exit code 0 means successful
             return True

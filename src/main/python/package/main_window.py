@@ -29,7 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.central_widget)
         
         self.lw_files = QtWidgets.QListWidget()
-        self.lbl_dropInfo = QtWidgets.QLabel('Drop images on above UI')
+        self.lbl_dropInfo = QtWidgets.QLabel('Drag & Drop images or Quicktimes')
         self.btn_convert = QtWidgets.QPushButton('Convert')
         self.color_blue = QtGui.QColor(237,247,247)
         self.color_green = QtGui.QColor(200,237,172)
@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu = self.menu.addMenu("&Preferences")
         file_menu.addAction(self.preference_action)
         
-        self.lbl_dropInfo.setVisible(False)
+        self.lbl_dropInfo.setVisible(True)
         self.setAcceptDrops(True)
         self.lw_files.setAlternatingRowColors(True)
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
@@ -281,11 +281,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 
     # Drag & Drop
     def dragEnterEvent(self, event):
-        self.lbl_dropInfo.setVisible(True)
+        # self.lbl_dropInfo.setVisible(True)
         event.accept()
 
     def dragLeaveEvent(self, event):
-        self.lbl_dropInfo.setVisible(False)
+        # self.lbl_dropInfo.setVisible(False)
+        pass
 
     def dropEvent(self, event):
         if preferences.check():
@@ -294,7 +295,7 @@ class MainWindow(QtWidgets.QMainWindow):
             file_list = [url.toLocalFile() for url in event.mimeData().urls()]
 
             self.add_sequences(file_list)
-            self.lbl_dropInfo.setVisible(False)
+            self.lbl_dropInfo.setVisible(not bool(self.lw_files))
         else:
             self.open_preferences('')
 

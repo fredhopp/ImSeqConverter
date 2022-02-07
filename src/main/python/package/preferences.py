@@ -175,7 +175,6 @@ def default_path():
         dir = os.path.join(os.path.dirname(sys.executable),'preferences')
     else:
         dir = os.path.join(os.path.dirname(__file__),'preferences')
-    print(dir)
     return dir
         
 def check():
