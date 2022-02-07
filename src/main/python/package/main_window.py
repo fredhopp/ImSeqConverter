@@ -6,7 +6,7 @@ from PySide6 import QtGui, QtWidgets, QtCore
 
 from package.worker import Worker
 from package.file_sequence import SequencesFromFiles
-from package.preferences_window import PreferenceWindow
+import package.preferences as preferences
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -172,7 +172,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_preferences(self, checked):
         if self.pref_window is None:
-            self.pref_window = PreferenceWindow()
+            self.pref_window = preferences.PreferenceWindow()
         self.pref_window.show()
 
     def update_sequence_attribute(self, attribute, connect_item, attrib_value ):
@@ -288,12 +288,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lbl_dropInfo.setVisible(False)
 
     def dropEvent(self, event):
-        event.accept() # on animation enabled OS, the file would visually go back to thge finder (OS UI animation)-> accept
+        if preferences.check():
+            event.accept() # on animation enabled OS, the file would visually go back to thge finder (OS UI animation)-> accept
 
-        file_list = [url.toLocalFile() for url in event.mimeData().urls()]
+            file_list = [url.toLocalFile() for url in event.mimeData().urls()]
 
-        self.add_sequences(file_list)
-        self.lbl_dropInfo.setVisible(False)
+            self.add_sequences(file_list)
+            self.lbl_dropInfo.setVisible(False)
+        else:
+            self.open_preferences('')
 
     def add_sequences(self, file_list):
         sqff = SequencesFromFiles(filepath_list=file_list)

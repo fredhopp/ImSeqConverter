@@ -1,16 +1,16 @@
-# import collections
 import os
 import glob
 import subprocess
 import json
 
 import clique
+
+import package.preferences as preferences
      
 def find_ffprobe():  # sourcery skip: merge-nested-ifs
-    user_dir = os.path.expanduser('~')
-    pref_dir = os.path.join(user_dir,'.ImageSequenceConverter')
+    pref_dir = preferences.default_path()
     pref_file = os.path.join(pref_dir,'preferences.json')
-    
+
     FFPROBE_PATH = None
     if os.path.exists(pref_file):
         with open(pref_file, 'r') as pref_file:
@@ -22,10 +22,9 @@ def find_ffprobe():  # sourcery skip: merge-nested-ifs
         if os.path.exists(FFPROBE_PATH) and FFPROBE_PATH.endswith('ffprobe.exe'):
             return FFPROBE_PATH
 
-
 class Movie():
     def __init__(self, filepath):
-        ffprobe_path = find_ffprobe()   
+        ffprobe_path = find_ffprobe()
         filepath = filepath.replace('/','\\')
         
         ffprobe_seconds_cmd = (f'{ffprobe_path} -v quiet -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 ' 

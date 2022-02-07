@@ -1,10 +1,10 @@
-from package.main_window import MainWindow
-
-from PySide6 import QtWidgets, QtGui
-
 import sys
 import os
 import pathlib
+
+from PySide6 import QtWidgets, QtGui
+
+from package.main_window import MainWindow
 
 if __name__=='__main__':
     app = QtWidgets.QApplication(sys.argv)

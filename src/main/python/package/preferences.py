@@ -94,7 +94,7 @@ class PreferenceWindow(QtWidgets.QWidget):
     def pick_ffmpeg_folder(self):
         default_folder = self.le_ffmpegDir.text()
         if not os.path.isdir(default_folder):
-            default_folder = self.default_path()
+            default_folder = os.path.dirname(default_path())
         if folder := QtWidgets.QFileDialog.getExistingDirectory(
                                                                 dir=default_folder,
                                                                 caption='ffmpeg Folder',
@@ -105,7 +105,7 @@ class PreferenceWindow(QtWidgets.QWidget):
     def pick_lut_folder(self):
         default_folder = self.le_lutDir.text()
         if not os.path.isdir(default_folder):
-            default_folder = self.default_path()
+            default_folder = os.path.dirname(default_path())
         if folder := QtWidgets.QFileDialog.getExistingDirectory(
                                                                 dir=default_folder,
                                                                 caption='Colorspace Luts Folder',
@@ -117,7 +117,7 @@ class PreferenceWindow(QtWidgets.QWidget):
         default_file = self.le_font.text()
         default_folder = os.path.dirname(default_file)
         if not os.path.exists(default_folder):
-            default_folder = self.default_path()
+            default_folder = os.path.dirname(default_path())
         font_file = QtWidgets.QFileDialog.getOpenFileName(
                                                                 dir=default_folder,
                                                                 caption='Font',
@@ -127,8 +127,7 @@ class PreferenceWindow(QtWidgets.QWidget):
             self.le_font.setText(font_file[0].replace('\\','/'))
         
     def load_preferences(self):
-        exe_dir = self.default_path()
-        pref_dir = os.path.join(exe_dir,'preferences')
+        pref_dir = default_path()
         pref_file = os.path.join(pref_dir,'preferences.json')
 
         if os.path.exists(pref_file):
@@ -143,8 +142,7 @@ class PreferenceWindow(QtWidgets.QWidget):
                         self.le_lutDir.setText(value.replace('\\','/'))
                         
     def save_preferences(self):
-        exe_dir = self.default_path()
-        pref_dir = os.path.join(exe_dir,'preferences')
+        pref_dir = default_path()
         if not os.path.exists(pref_dir):
             os.mkdir(pref_dir)
         pref_file = os.path.join(pref_dir,'preferences.json')
@@ -172,8 +170,15 @@ class PreferenceWindow(QtWidgets.QWidget):
     def close_preference_window(self):
         self.close()
         
-    def default_path(self):
-        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-            return os.path.dirname(sys.executable)
-        else:
-            return os.path.dirname(__file__)
+def default_path():
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        dir = os.path.join(os.path.dirname(sys.executable),'preferences')
+    else:
+        dir = os.path.join(os.path.dirname(__file__),'preferences')
+    print(dir)
+    return dir
+        
+def check():
+    pref_dir = default_path()
+    pref_file = os.path.join(pref_dir,'preferences.json')
+    return bool(os.path.exists(pref_file))

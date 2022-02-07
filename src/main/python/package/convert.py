@@ -1,7 +1,8 @@
 import os
 import subprocess
 import json
-import math
+
+import package.preferences as preferences
 
 class ConvertToMovie():
     def __init__(self, 
@@ -20,9 +21,7 @@ class ConvertToMovie():
                 seqtype='IMG'
                 ):
         
-        
-        user_dir = os.path.expanduser('~')
-        pref_dir = os.path.join(user_dir,'.ImageSequenceConverter')
+        pref_dir = preferences.default_path()
         pref_file = os.path.join(pref_dir,'preferences.json')
         if os.path.exists(pref_file):
             with open(pref_file, 'r') as pref_file:
