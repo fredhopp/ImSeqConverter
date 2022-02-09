@@ -74,8 +74,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.combo_colorspaceOut.addItem('Output - Rec.709')
         self.combo_colorspaceOut.addItem('Utility - sRGB - Texture')
         
-        self.combo_format.addItem('mp4')
-        self.combo_format.addItem('prores-mov')
+        self.combo_format.addItem('mp4 - h.264')
+        self.combo_format.addItem('mp4 - h.265')
+        self.combo_format.addItem('mov - prores')
 
         self.combo_fps.addItem('23.976')
         self.combo_fps.addItem('24')
@@ -280,7 +281,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def sequence_converted(self, lw_item, returned_value):
             if returned_value:
-                # print(f'returned_value: {returned_value} @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
                 lw_item.setIcon(self.cache_IconChecked)
                 self.prg_dialog.setValue(self.prg_dialog.value() + 1) # TO DO: still does not update properly
                 lw_item.processed = True
@@ -330,7 +330,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 lw_item.end = seq.end
                 lw_item.head = 0
                 lw_item.tail = 0
-                lw_item.format = 'mp4'
+                lw_item.format = 'mp4 - h.264'
                 
                 lw_item.quality = 'High'
                 lw_item.colorspaceIn = 'ACEScg'

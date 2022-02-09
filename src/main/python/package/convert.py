@@ -8,7 +8,7 @@ class ConvertToMovie():
     def __init__(self, 
                 sourcepath='',
                 filename='',
-                format='mp4',
+                format='mp4-h.264',
                 quality='High',
                 fps='23.976',
                 startframe=1001,
@@ -39,9 +39,10 @@ class ConvertToMovie():
         self.outputfolder = outputfolder
         self.filename = filename
         self.startframe = startframe
-        if format=='prores-mov':
-            format='mov'
-        self.extension = format
+        self.extension = 'mp4'
+        self.format = format
+        if format=='mov - prores':
+            self.extension = 'mov'
         self.quality = quality
         self.framerange = framerange
         self.colorspaceIn = colorspaceIn
@@ -97,11 +98,12 @@ class ConvertToMovie():
 
         
         # ffmpeg compression related stuff 
-        if self.extension == 'mp4':    
+        if self.format == 'mp4 - h.264' or self.format == 'mp4 - h.265':    
+            h26x_lib_version = self.format[-1]
             dic_quality = {'High': 18, 'Medium': 23, 'Low': 28} # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
-            ffmpegArg_compression1 = f'-c:v libx264 -crf {dic_quality[self.quality]}'
+            ffmpegArg_compression1 = f'-c:v libx26{h26x_lib_version} -crf {dic_quality[self.quality]}'
             ffmpegArg_compression2 = 'format=yuv420p,' # include comma, so that we can skip in the command if not needed
-        else:  # prores
+        elif self.format == 'mov - prores':
             dic_quality = {'High': 2, 'Medium': 1, 'Low': 0} # -profile:v -> proxy (0) lt (1) standard (2) hq (3)
             ffmpegArg_compression1 = f'-c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le'
             ffmpegArg_compression2 = '' # skipped in prores_ks, to be verified
