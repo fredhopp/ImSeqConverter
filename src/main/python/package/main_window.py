@@ -202,7 +202,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.combo_fps.setCurrentText(list_item.fps)
             self.check_framenum.setChecked(list_item.ovl_framenum)
             self.combo_resolution.setCurrentText(list_item.resolution)
-
+                        
+            selected_fps_values = list(set([item.seqtype for item in self.lw_files.selectedItems()]))
+            
             if len(self.lw_files.selectedItems())==1:
                 self.le_outputname.setDisabled(False)
                 self.le_outputname.setText(list_item.outputname)
@@ -210,6 +212,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     # self.spn_head.setDisabled(True)
                     # self.spn_tail.setDisabled(True)
                     self.combo_fps.setDisabled(True)
+            elif len(selected_fps_values)==1 and selected_fps_values[0]=='MOV':
+                self.combo_fps.setDisabled(True)
             else:
                 self.le_outputname.setDisabled(True)
                 self.spn_head.setDisabled(False)
@@ -220,6 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def enable_disable_attribute_widgets(self, arg):
         self.le_outputname.setDisabled(arg)
+        self.btn_outputFolder.setDisabled(arg)
         self.le_outputFolder.setDisabled(arg)
         
         self.combo_quality.setDisabled(arg)
@@ -249,7 +254,12 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
         self.thread = QtCore.QThread(self)
-
+        
+        self.prg_dialog = QtWidgets.QProgressDialog('Movie Conversion', 'Cancel', 1, len(sequences_to_convert_boollist)+1)
+        self.prg_dialog.setValue(1)
+        self.prg_dialog.canceled.connect(self.abort)
+        self.prg_dialog.show()
+        
         self.worker = Worker(lw_items)
 
         self.worker.moveToThread(self.thread)
@@ -257,11 +267,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread.started.connect(self.worker.convert_sequences)
         self.thread.finished.connect(self.finish)
 
-        self.thread.start()
-        
-        self.prg_dialog = QtWidgets.QProgressDialog('Movie Conversion', 'Cancel', 1, len(sequences_to_convert_boollist))
-        self.prg_dialog.canceled.connect(self.abort)
-        self.prg_dialog.show()
+        self.thread.start()       
 
     def abort(self):
         self.worker.runs = False
@@ -274,6 +280,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def sequence_converted(self, lw_item, returned_value):
             if returned_value:
+                # print(f'returned_value: {returned_value} @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
                 lw_item.setIcon(self.cache_IconChecked)
                 self.prg_dialog.setValue(self.prg_dialog.value() + 1) # TO DO: still does not update properly
                 lw_item.processed = True

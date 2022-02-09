@@ -115,10 +115,24 @@ class ConvertToMovie():
 
         ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' 
         returned_value = subprocess.call(ffmpeg_command, shell=False)
-        # process_fps = subprocess.Popen(ffprobe_fps_command, shell=False, stdout=subprocess.PIPE)
-        # out, err = process_fps.communicate()
-        # fps = str(out).split("'")[1].split('\\')[0]
-        # fps = float(fps.split('/')[0]) / float(fps.split('/')[1])
+        # process = subprocess.Popen(ffmpeg_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # out, err = process.communicate()
+        # # print(f'out: {out} err: {err} process: {process.returncode}')
+        # # while err:
+        # #     conversion_progress  = err.split('frame= ')[-1].split(' fps=')[0]
+        # #     print(f'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@frame: {conversion_progress} @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        # returned_value = process.returncode
+        # ------------------------------------------------ OR->
+        # p = subprocess.Popen(["python printandwait.py"], shell=True, stdout=subprocess.PIPE)
+        # while True:
+        #     print "Looping"
+        #     line = p.stdout.readline()
+        #     if not line:
+        #         break
+        #     print line.strip()
+        #     sys.stdout.flush()
+    
+#  TO DO: do line read and check if starts with "frame= " -> just read that line over and over , how to?
 
         if not returned_value:  # exit code 0 means successful
             return True
