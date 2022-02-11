@@ -6,10 +6,11 @@ class Worker(QtCore.QObject):
     signal_sequence_converted = QtCore.Signal(object, bool)
     finished = QtCore.Signal()
     
-    def __init__(self, lw_items):
+    def __init__(self, lw_items, dialog):
         super().__init__()
         self.lw_items = lw_items
         self.runs = True
+        self.progress_dialog = dialog
     
     def convert_sequences(self):
         for lw_item in self.lw_items:
@@ -28,7 +29,8 @@ class Worker(QtCore.QObject):
                                         overlay_framenum=lw_item.ovl_framenum,
                                         resolution=lw_item.resolution,
                                         outputfolder=lw_item.outputfolder,
-                                        seqtype=lw_item.seqtype
+                                        seqtype=lw_item.seqtype,
+                                        dialog = self.progress_dialog
                                         )
                 
                 returned_value = movie.to_movie()
