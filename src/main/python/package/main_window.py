@@ -255,9 +255,13 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
         self.thread = QtCore.QThread(self)
-        
-        self.prg_dialog = QtWidgets.QProgressDialog('Movie Conversion', 'Cancel', 1, len(sequences_to_convert_boollist)+1)
-        self.prg_dialog.setValue(1)
+        self.prg_dialog = QtWidgets.QProgressDialog('...', 'Cancel', 1, len(sequences_to_convert_boollist)+1)     
+        self.prg_dialog.setWindowTitle('Encoding')
+        self.prg_dialog.label =  QtWidgets.QLabel()
+        self.prg_dialog.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.prg_dialog.setLabel(self.prg_dialog.label)
+        self.prg_dialog.setValue(1) # needs to init
+        self.prg_dialog.resize(320, 120)
         self.prg_dialog.canceled.connect(self.abort)
         self.prg_dialog.show()
         
@@ -265,7 +269,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.worker.moveToThread(self.thread)
         self.worker.signal_sequence_converted.connect(self.sequence_converted)
-        # self.worker.signal_sequence_progress.connect(self.sequence_progress)
         self.thread.started.connect(self.worker.convert_sequences)
         self.thread.finished.connect(self.finish)
 

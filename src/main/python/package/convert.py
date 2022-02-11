@@ -4,6 +4,7 @@ import json
 import sys
 import time
 import gc
+import math
 
 from PySide6 import QtWidgets
 import package.preferences as preferences
@@ -130,7 +131,6 @@ class ConvertToMovie():
             file = open(file_progress_path, 'w')
             file.close()
         file_progress = open(file_progress_path, 'r', encoding = 'utf-8')
-        print(self.dialog.labelText())
         process = subprocess.Popen(ffmpeg_command,
                                    shell = False,
                                    stdout=subprocess.PIPE,
@@ -142,12 +142,13 @@ class ConvertToMovie():
             where = file_progress.tell()
             if line := file_progress.readline():
                 if line.startswith('frame='):
-                    dialog_text = f'frame ------>>>>> {line.split("=")[-1]}'
-                    print(dialog_text)
-                    # self.dialog.setLabelText(dialog_text)
+                    percentage = math.ceil(float(line.split("=")[-1])/float(self.framerange)*100.0)
+                    text = f'{self.filename} \nEncoding: {percentage} %' # frame: {line.split("=")[-1]}'
+                    self.dialog.label.setText(text)
             else:
-                time.sleep(.01)
+                # time.sleep(.5)
                 file_progress.seek(where)
+            # sys.stdout.flush()
             if not shell_line:
                 break
 

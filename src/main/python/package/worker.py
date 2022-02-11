@@ -10,7 +10,7 @@ class Worker(QtCore.QObject):
         super().__init__()
         self.lw_items = lw_items
         self.runs = True
-        self.progress_dialog = dialog
+        self.dialog = dialog
     
     def convert_sequences(self):
         for lw_item in self.lw_items:
@@ -30,7 +30,7 @@ class Worker(QtCore.QObject):
                                         resolution=lw_item.resolution,
                                         outputfolder=lw_item.outputfolder,
                                         seqtype=lw_item.seqtype,
-                                        dialog = self.progress_dialog
+                                        dialog = self.dialog
                                         )
                 
                 returned_value = movie.to_movie()
