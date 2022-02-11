@@ -1,7 +1,12 @@
 import os
 import subprocess
 import json
+import sys
+import time
+import gc
+import math
 
+from PySide6 import QtWidgets
 import package.preferences as preferences
 
 class ConvertToMovie():
@@ -18,11 +23,13 @@ class ConvertToMovie():
                 overlay_framenum=False,
                 resolution='Original',
                 outputfolder='',
-                seqtype='IMG'
+                seqtype='IMG',
+                dialog=QtWidgets.QProgressDialog,
                 ):
         
         pref_dir = preferences.default_path()
         pref_file = os.path.join(pref_dir,'preferences.json')
+        self.dialog = dialog
         if os.path.exists(pref_file):
             with open(pref_file, 'r') as pref_file:
                 json_object = json.load(pref_file)
@@ -84,7 +91,7 @@ class ConvertToMovie():
                                         r'alpha=.5'
                                         r',' # include comma, so that we can skip the overlay altogether in the command if not needed
                                         )
-            
+
         # ffmpeg resizing related stuff
         dic_res = {'1080p':(1920,1080),'UHD':(3840,2160)}
         if self.resolution != 'Original':
@@ -96,9 +103,9 @@ class ConvertToMovie():
             ffmpeg_scale_arg = ''
             ffmpeg_pad_arg = 'pad=ceil(iw/2)*2:ceil(ih/2)*2' # adding black pixel padding for uneven resolutions -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"
 
-        
-        # ffmpeg compression related stuff 
-        if self.format == 'mp4 - h.264' or self.format == 'mp4 - h.265':    
+
+        # ffmpeg compression related stuff
+        if self.format in ['mp4 - h.264', 'mp4 - h.265']:    
             h26x_lib_version = self.format[-1]
             dic_quality = {'High': 18, 'Medium': 23, 'Low': 28} # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
             ffmpegArg_compression1 = f'-c:v libx26{h26x_lib_version} -crf {dic_quality[self.quality]}'
@@ -115,9 +122,38 @@ class ConvertToMovie():
             ffmpegArg_timecode = f'-ss {start_timecode} -t {end_timecode} -async 1 -strict -2'            
             ffmpeg_args = f'-y {ffmpegArg_timecode} -i "{sourcepath}" {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
 
-        ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_args}' 
-        returned_value = subprocess.call(ffmpeg_command, shell=False)
+        file_progress_path = os.path.join(preferences.default_path(),'progress.log').replace('\\','/')
+        ffmpeg_progress_args = f' -progress "{file_progress_path} "'
+        ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_progress_args} {ffmpeg_args}'
+        # returned_value = subprocess.call(ffmpeg_command, shell=False)
+        
+        if not os.path.exists(file_progress_path):
+            file = open(file_progress_path, 'w')
+            file.close()
+        file_progress = open(file_progress_path, 'r', encoding = 'utf-8')
+        process = subprocess.Popen(ffmpeg_command,
+                                   shell = False,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                    universal_newlines=False,
+                                    )
+        while True:
+            shell_line = process.stdout.readline()
+            where = file_progress.tell()
+            if line := file_progress.readline():
+                if line.startswith('frame='):
+                    percentage = math.ceil(float(line.split("=")[-1])/float(self.framerange)*100.0)
+                    text = f'{self.filename} \nEncoding: {percentage} %' # frame: {line.split("=")[-1]}'
+                    self.dialog.label.setText(text)
+            else:
+                # time.sleep(.5)
+                file_progress.seek(where)
+            # sys.stdout.flush()
+            if not shell_line:
+                break
 
+
+        returned_value = process.returncode
         if not returned_value:  # exit code 0 means successful
             return True
 
