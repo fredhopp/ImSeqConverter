@@ -66,6 +66,8 @@ class SequencesFromFiles():
     def return_sequences(self):  # sourcery skip: extract-method
         imSequence_extensions = ['jpg','jpeg','png','tif','tiff','exr','dpx','tga']
         movie_extensions = ['mov','avi','mkv','mp4']
+        imSequence_extensions.append([ext.upper() for ext in imSequence_extensions ])
+        movie_extensions.append([ext.upper() for ext in movie_extensions ])
         imageFilePath_list = []
         movieFilePath_list = []
         
@@ -90,12 +92,14 @@ class SequencesFromFiles():
             for dir_collection in dir_collections:
                 for collection in collections:
                     if collection.head.replace("\\","/") == dir_collection.head.replace("\\","/"):
-                        self.add_properties(dir_collection)
-                        self.imSequences.append(dir_collection)
+                        if  collection.tail == dir_collection.tail:
+                            self.add_properties(dir_collection)
+                            self.imSequences.append(dir_collection)
                 for remainder_item in remainder:
                     if remainder_item.startswith(dir_collection.head.replace("\\","/")) and remainder_item not in dir_remainder:
-                        self.add_properties(dir_collection)
-                        self.imSequences.append(dir_collection)
+                        if remainder_item.endswith(dir_collection.tail):
+                            self.add_properties(dir_collection)
+                            self.imSequences.append(dir_collection)
                 
         self.movs = []
         if movieFilePath_list:

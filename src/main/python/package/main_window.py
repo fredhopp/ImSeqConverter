@@ -29,7 +29,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.central_widget)
         
         self.lw_files = QtWidgets.QListWidget()
-        self.lbl_dropInfo = QtWidgets.QLabel('Drag & Drop images or Quicktimes')
+        self.btn_add = QtWidgets.QPushButton()
+        self.btn_selectAll = QtWidgets.QPushButton()
+        self.btn_remove = QtWidgets.QPushButton()
+        # self.lbl_dropInfo = QtWidgets.QLabel('Drag & Drop images or Quicktimes')
         self.btn_convert = QtWidgets.QPushButton('Convert')
         self.color_blue = QtGui.QColor(237,247,247)
         self.color_green = QtGui.QColor(200,237,172)
@@ -59,11 +62,18 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu = self.menu.addMenu("&Preferences")
         file_menu.addAction(self.preference_action)
         
-        self.lbl_dropInfo.setVisible(True)
+        # self.lbl_dropInfo.setVisible(True)
         self.setAcceptDrops(True)
         self.lw_files.setAlternatingRowColors(True)
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
-
+        
+        self.btn_add.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'plus.svg')))
+        self.btn_add.setToolTip('Add image sequences or quicktimes to the list.')
+        self.btn_selectAll.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'select_all.svg')))
+        self.btn_selectAll.setToolTip('Select all image sequences in the list.')
+        self.btn_remove.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'minus.svg')))
+        self.btn_remove.setToolTip('Remove selected images sequences from the list')
+        
         self.lbl_outputSettings.setAlignment(QtCore.Qt.AlignCenter)
         self.combo_colorspaceIn.addItem('ACEScg')
         self.combo_colorspaceIn.addItem('Utility - Linear - sRGB')
@@ -105,6 +115,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.centralWidget().setLayout(self.main_layout)
 
         self.left_layout = QtWidgets.QVBoxLayout()
+        self.left_icon_layout = QtWidgets.QHBoxLayout()
         self.right_layout = QtWidgets.QVBoxLayout()        
         
         self.right_title_layout = QtWidgets.QHBoxLayout()
@@ -120,9 +131,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_layout.addStretch()
         self.right_layout.addLayout(self.right_folder_layout)
         
+        self.left_icon_layout.addWidget(self.btn_add)
+        self.left_icon_layout.addWidget(self.btn_selectAll)
+        self.left_icon_layout.addWidget(self.btn_remove)
+        self.left_layout.addLayout(self.left_icon_layout)
         self.left_layout.addWidget(self.lw_files)
-        self.left_layout.addWidget(self.lbl_dropInfo)
-        
+                
+        # self.left_layout.addWidget(self.lbl_dropInfo)        
         self.main_layout.addWidget(self.btn_convert, 1, 0, 1, 2)
         
         self.right_title_layout.addWidget(self.lbl_outputSettings)
@@ -142,6 +157,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_folder_layout.addWidget(self.le_outputFolder)
         
     def setup_connections(self):
+        self.btn_selectAll.clicked.connect(self.select_all_items)
+        self.btn_remove.clicked.connect(self.delete_selected_item)
         QtGui.QShortcut(QtGui.QKeySequence('Delete'), self.lw_files, self.delete_selected_item)
         self.preference_action.triggered.connect(self.open_preferences)
         self.lw_files.itemSelectionChanged.connect(self.update_properties_display)
@@ -243,6 +260,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def delete_selected_item(self):
         for lw_item in self.lw_files.selectedItems():
             self.lw_files.takeItem(self.lw_files.row(lw_item))
+            
+    def select_all_items(self):
+        lw_items = [self.lw_files.item(index) for index in range(self.lw_files.count())]
+        for lw_item in lw_items:
+            lw_item.setSelected(True)
 
     def convert_sequences(self):
         lw_items = [self.lw_files.item(index) for index in range(self.lw_files.count())]
@@ -309,7 +331,7 @@ class MainWindow(QtWidgets.QMainWindow):
             file_list = [url.toLocalFile() for url in event.mimeData().urls()]
 
             self.add_sequences(file_list)
-            self.lbl_dropInfo.setVisible(not bool(self.lw_files))
+            # self.lbl_dropInfo.setVisible(not bool(self.lw_files))
         else:
             self.open_preferences('')
 
