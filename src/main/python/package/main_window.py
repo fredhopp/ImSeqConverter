@@ -221,7 +221,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.check_framenum.setChecked(list_item.ovl_framenum)
             self.combo_resolution.setCurrentText(list_item.resolution)
                         
-            selected_fps_values = list(set([item.seqtype for item in self.lw_files.selectedItems()]))
+            selected_seqtype_values = list(set([item.seqtype for item in self.lw_files.selectedItems()]))
             
             if len(self.lw_files.selectedItems())==1:
                 self.le_outputname.setDisabled(False)
@@ -230,8 +230,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     # self.spn_head.setDisabled(True)
                     # self.spn_tail.setDisabled(True)
                     self.combo_fps.setDisabled(True)
-            elif len(selected_fps_values)==1 and selected_fps_values[0]=='MOV':
+            elif len(selected_seqtype_values)==1 and selected_seqtype_values[0]=='MOV': # all items are Quicktimes
                 self.combo_fps.setDisabled(True)
+                self.le_outputname.setDisabled(True)
             else:
                 self.le_outputname.setDisabled(True)
                 self.spn_head.setDisabled(False)
