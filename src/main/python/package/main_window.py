@@ -318,11 +318,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 
     # Drag & Drop
     def dragEnterEvent(self, event):
-        # self.lbl_dropInfo.setVisible(True)
         event.accept()
 
     def dragLeaveEvent(self, event):
-        # self.lbl_dropInfo.setVisible(False)
         pass
 
     def dropEvent(self, event):
@@ -332,7 +330,6 @@ class MainWindow(QtWidgets.QMainWindow):
             file_list = [url.toLocalFile() for url in event.mimeData().urls()]
 
             self.add_sequences(file_list)
-            # self.lbl_dropInfo.setVisible(not bool(self.lw_files))
         else:
             self.open_preferences('')
 
