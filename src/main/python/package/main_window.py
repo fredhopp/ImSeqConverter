@@ -1,4 +1,5 @@
 import os
+import logging
 from functools import cached_property
 from functools import partial
 
@@ -12,6 +13,7 @@ import package.preferences as preferences
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, resource_dir):
         super().__init__()
+        self.sub_logger = logging.getLogger('__main__')
         self.resource_dir = resource_dir
         self.pref_window = None
         self.setWindowTitle('Image Sequence Converter')
@@ -32,7 +34,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.btn_add = QtWidgets.QPushButton()
         self.btn_selectAll = QtWidgets.QPushButton()
         self.btn_remove = QtWidgets.QPushButton()
-        # self.lbl_dropInfo = QtWidgets.QLabel('Drag & Drop images or Quicktimes')
         self.btn_convert = QtWidgets.QPushButton('Convert')
         self.color_blue = QtGui.QColor(237,247,247)
         self.color_green = QtGui.QColor(200,237,172)
@@ -62,17 +63,16 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu = self.menu.addMenu("&Preferences")
         file_menu.addAction(self.preference_action)
         
-        # self.lbl_dropInfo.setVisible(True)
         self.setAcceptDrops(True)
         self.lw_files.setAlternatingRowColors(True)
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
         
         self.btn_add.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'plus.svg')))
-        self.btn_add.setToolTip('Add image sequences or quicktimes to the list.')
+        self.btn_add.setToolTip('Add image sequences or quicktimes to the list. (Drag & Drop)')
         self.btn_selectAll.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'select_all.svg')))
-        self.btn_selectAll.setToolTip('Select all image sequences in the list.')
+        self.btn_selectAll.setToolTip('Select all image sequences in the list. (Ctrl + A)')
         self.btn_remove.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'minus.svg')))
-        self.btn_remove.setToolTip('Remove selected images sequences from the list')
+        self.btn_remove.setToolTip('Remove selected images sequences from the list. (Del)')
         
         self.lbl_outputSettings.setAlignment(QtCore.Qt.AlignCenter)
         self.combo_colorspaceIn.addItem('ACEScg')
@@ -157,6 +157,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_folder_layout.addWidget(self.le_outputFolder)
         
     def setup_connections(self):
+        self.btn_add.clicked.connect(self.pick_files)
         self.btn_selectAll.clicked.connect(self.select_all_items)
         self.btn_remove.clicked.connect(self.delete_selected_item)
         QtGui.QShortcut(QtGui.QKeySequence('Delete'), self.lw_files, self.delete_selected_item)
@@ -174,7 +175,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.check_framenum.stateChanged.connect(partial(self.update_sequence_attribute, 'ovl_framenum', self.check_framenum.isChecked()))
         self.btn_outputFolder.clicked.connect(self.pick_folder)
         self.le_outputFolder.textChanged.connect(partial(self.update_sequence_attribute, 'outputfolder', self.le_outputFolder.text()))
-
         self.btn_convert.clicked.connect(self.convert_sequences)
    
     def pick_folder(self):
@@ -289,12 +289,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.prg_dialog.show()
         
         self.worker = Worker(lw_items, self.prg_dialog)
+        self.sub_logger.info('sent to worker')
 
         self.worker.moveToThread(self.thread)
         self.worker.signal_sequence_converted.connect(self.sequence_converted)
         self.thread.started.connect(self.worker.convert_sequences)
         self.thread.finished.connect(self.finish)
-
+        self.sub_logger.info('start thread')
         self.thread.start()       
 
     def abort(self):
@@ -305,6 +306,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.prg_dialog.setValue(self.prg_dialog.maximum())
         self.prg_dialog.cancel()
         self.thread.quit()
+        file_progress_path = os.path.join(preferences.default_path(),'progress.buffer').replace('\\','/')
+        if os.path.exists(file_progress_path):
+            os.remove(file_progress_path)
         
     def signal_sequence_progress(self, lw_item, returned_value):
         pass
@@ -314,7 +318,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 lw_item.setIcon(self.cache_IconChecked)
                 self.prg_dialog.setValue(self.prg_dialog.value() + 1) # TO DO: still does not update properly
                 lw_item.processed = True
-                self.thread.quit()
+                self.thread.quit()            
                 
     # Drag & Drop
     def dragEnterEvent(self, event):
@@ -325,13 +329,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def dropEvent(self, event):
         if preferences.check():
-            event.accept() # on animation enabled OS, the file would visually go back to thge finder (OS UI animation)-> accept
+            event.accept() # on animation enabled OS, the file would visually go back to the finder (OS UI animation)-> accept
             file_list = [url.toLocalFile() for url in event.mimeData().urls()]
-
             self.add_sequences(file_list)
         else:
             self.open_preferences('')
-
+    
+    def pick_files(self):
+        if not preferences.check():
+            self.open_preferences('')
+        else:        
+            default_folder = preferences.browse_load('last_location')
+            if not os.path.isdir(default_folder):
+                default_folder = os.path.expanduser('~')
+            if file_list := QtWidgets.QFileDialog.getOpenFileNames(
+                                                                    dir=default_folder,
+                                                                    caption='Image Sequences or Quicktimes',
+                                                                    # filter='Images (*.jpg *.JPG *.exr *.EXR)', # acceptance handled by file_sequence
+                                                                ):
+                last_location = os.path.dirname(file_list[0][0])
+                preferences.browse_save('last_location', last_location)
+                self.add_sequences(file_list[0])        
+                
     def add_sequences(self, file_list):
         sqff = SequencesFromFiles(filepath_list=file_list)
         seqs = sqff.sequences
