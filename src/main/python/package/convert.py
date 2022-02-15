@@ -5,6 +5,7 @@ import sys
 import time
 import gc
 import math
+import logging
 
 from PySide6 import QtWidgets
 import package.preferences as preferences
@@ -26,7 +27,7 @@ class ConvertToMovie():
                 seqtype='IMG',
                 dialog=QtWidgets.QProgressDialog,
                 ):
-        
+        self.sub_logger = logging.getLogger('__main__')
         pref_dir = preferences.default_path()
         pref_file = os.path.join(pref_dir,'preferences.json')
         self.dialog = dialog
@@ -122,10 +123,12 @@ class ConvertToMovie():
             ffmpegArg_timecode = f'-ss {start_timecode} -t {end_timecode} -async 1 -strict -2'            
             ffmpeg_args = f'-y {ffmpegArg_timecode} -i "{sourcepath}" {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
 
-        file_progress_path = os.path.join(preferences.default_path(),'progress.log').replace('\\','/')
+        file_progress_path = os.path.join(preferences.default_path(),'progress.buffer').replace('\\','/')
         ffmpeg_progress_args = f' -progress "{file_progress_path} "'
         ffmpeg_command = f'"{ffmpegpath}" {ffmpeg_progress_args} {ffmpeg_args}'
         # returned_value = subprocess.call(ffmpeg_command, shell=False)
+        
+        self.sub_logger.info(f'ffmpeg command: {ffmpeg_command}')
         
         if not os.path.exists(file_progress_path):
             file = open(file_progress_path, 'w')

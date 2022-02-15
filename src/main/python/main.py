@@ -1,12 +1,37 @@
 import sys
 import os
 import pathlib
+import datetime
+import logging
 
 from PySide6 import QtWidgets, QtGui
 
 from package.main_window import MainWindow
+import package.preferences as preferences 
 
+
+def logger():
+    filename_token = os.path.basename(sys.executable).split('.')[0]
+    date = datetime.datetime.now()
+    date_token = f'{date.year}{date.month}{date.day}_{date.hour}{date.minute}{date.second}'    
+    preferences.create_folder()
+    log_file_path = os.path.join(preferences.default_path(),f'{filename_token}_{date_token}.log')
+    
+    # configure log formatter
+    logFormatter = logging.Formatter("%(asctime)s [%(filename)s] [%(funcName)s] [%(levelname)s] [%(lineno)d] %(message)s")
+    # configure file handler
+    fileHandler = logging.FileHandler(log_file_path)
+    fileHandler.setFormatter(logFormatter)
+    
+    logger = logging.getLogger(__name__)
+    logger.addHandler(fileHandler)
+    
+    # set the logging level
+    logger.setLevel(logging.DEBUG)
+    
+    
 if __name__=='__main__':
+    main_logger = logger()
     app = QtWidgets.QApplication(sys.argv)
     
     if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
