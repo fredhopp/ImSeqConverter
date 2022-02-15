@@ -1,4 +1,5 @@
 import os
+import logging
 from functools import cached_property
 from functools import partial
 
@@ -12,6 +13,7 @@ import package.preferences as preferences
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, resource_dir):
         super().__init__()
+        self.sub_logger = logging.getLogger('__main__')
         self.resource_dir = resource_dir
         self.pref_window = None
         self.setWindowTitle('Image Sequence Converter')
@@ -68,11 +70,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lw_files.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
         
         self.btn_add.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'plus.svg')))
-        self.btn_add.setToolTip('Add image sequences or quicktimes to the list.')
+        self.btn_add.setToolTip('Add image sequences or quicktimes to the list. (Drag & Drop)')
         self.btn_selectAll.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'select_all.svg')))
-        self.btn_selectAll.setToolTip('Select all image sequences in the list.')
+        self.btn_selectAll.setToolTip('Select all image sequences in the list. (Ctrl + A)')
         self.btn_remove.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'minus.svg')))
-        self.btn_remove.setToolTip('Remove selected images sequences from the list')
+        self.btn_remove.setToolTip('Remove selected images sequences from the list. (Del)')
         
         self.lbl_outputSettings.setAlignment(QtCore.Qt.AlignCenter)
         self.combo_colorspaceIn.addItem('ACEScg')
@@ -289,8 +291,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.prg_dialog.show()
         
         self.worker = Worker(lw_items, self.prg_dialog)
+        self.sub_logger.info('sent to worker')
 
         self.worker.moveToThread(self.thread)
+        self.sub_logger.info('moved to thread')
         self.worker.signal_sequence_converted.connect(self.sequence_converted)
         self.thread.started.connect(self.worker.convert_sequences)
         self.thread.finished.connect(self.finish)
@@ -305,6 +309,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.prg_dialog.setValue(self.prg_dialog.maximum())
         self.prg_dialog.cancel()
         self.thread.quit()
+        file_progress_path = os.path.join(preferences.default_path(),'progress.buffer').replace('\\','/')
+        if os.path.exists(file_progress_path):
+            os.remove(file_progress_path)
         
     def signal_sequence_progress(self, lw_item, returned_value):
         pass
@@ -314,7 +321,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 lw_item.setIcon(self.cache_IconChecked)
                 self.prg_dialog.setValue(self.prg_dialog.value() + 1) # TO DO: still does not update properly
                 lw_item.processed = True
-                self.thread.quit()
+                self.thread.quit()            
                 
     # Drag & Drop
     def dragEnterEvent(self, event):
@@ -326,7 +333,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def dropEvent(self, event):
         if preferences.check():
             event.accept() # on animation enabled OS, the file would visually go back to thge finder (OS UI animation)-> accept
-
             file_list = [url.toLocalFile() for url in event.mimeData().urls()]
 
             self.add_sequences(file_list)

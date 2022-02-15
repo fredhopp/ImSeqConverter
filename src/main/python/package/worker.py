@@ -1,6 +1,8 @@
+import logging
 from PySide6 import QtCore
 
 from package.convert import ConvertToMovie
+
 
 class Worker(QtCore.QObject):
     signal_sequence_converted = QtCore.Signal(object, bool)
@@ -8,6 +10,7 @@ class Worker(QtCore.QObject):
     
     def __init__(self, lw_items, dialog):
         super().__init__()
+        self.sub_logger = logging.getLogger('__main__')
         self.lw_items = lw_items
         self.runs = True
         self.dialog = dialog
@@ -32,7 +35,7 @@ class Worker(QtCore.QObject):
                                         seqtype=lw_item.seqtype,
                                         dialog = self.dialog
                                         )
-                
+                self.sub_logger.info(f'movie object attributes: {movie.__dict__}')
                 returned_value = movie.to_movie()
                 self.signal_sequence_converted.emit(lw_item, returned_value)
                 

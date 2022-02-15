@@ -181,3 +181,7 @@ def check():
     pref_dir = default_path()
     pref_file = os.path.join(pref_dir,'preferences.json')
     return bool(os.path.exists(pref_file))
+
+def create_folder():
+    if not os.path.isdir(default_path()):
+        os.makedirs(default_path())
