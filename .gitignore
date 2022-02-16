@@ -16,3 +16,7 @@ dist/ImSeqConverter_v1.0.1/
 dist/ImSeqConverter_v1.0.2 - Copy/
 
 dist/ImSeqConverter_v1.0.2/
+
+src/main/python/package/preferences/
+
+src/main/python/package/__pycache__/
