@@ -27,7 +27,7 @@ class ConvertToMovie():
                 seqtype='IMG',
                 dialog=QtWidgets.QProgressDialog,
                 ):
-        self.sub_logger = logging.getLogger('__main__')
+        # self.sub_logger = logging.getLogger('__main__')
         pref_dir = preferences.default_path()
         pref_file = os.path.join(pref_dir,'preferences.json')
         self.dialog = dialog

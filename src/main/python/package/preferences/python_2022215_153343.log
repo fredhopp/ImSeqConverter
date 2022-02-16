@@ -1,3 +1,0 @@
-2022-02-15 15:33:47,512 [worker.py] [__init__] [INFO] [13] worker init: {'signal_sequence_converted': <PySide6.QtCore.SignalInstance object at 0x000001749ABB7C10>, 'finished': <PySide6.QtCore.SignalInstance object at 0x000001749ABB7C30>, 'destroyed': <PySide6.QtCore.SignalInstance object at 0x000001749ABB7C50>, 'objectNameChanged': <PySide6.QtCore.SignalInstance object at 0x000001749ABB7C90>, 'sub_logger': <Logger __main__ (DEBUG)>}
-2022-02-15 15:33:47,513 [main_window.py] [convert_sequences] [INFO] [292] sent to worker
-2022-02-15 15:33:47,513 [main_window.py] [convert_sequences] [INFO] [298] start thread

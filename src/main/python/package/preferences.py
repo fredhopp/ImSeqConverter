@@ -26,15 +26,15 @@ class PreferenceWindow(QtWidgets.QWidget):
         
         self.lbl_ffmpegDir = QtWidgets.QLabel('Ffmpeg:')
         self.btn_ffmpegDir = QtWidgets.QPushButton()
-        self.le_ffmpegDir = QtWidgets.QLineEdit('Path to ffmpeg bin folder')
+        self.le_ffmpegDir = QtWidgets.QLineEdit('Ffmpeg bin folder')
         
         self.lbl_font = QtWidgets.QLabel('Font:')        
         self.btn_font = QtWidgets.QPushButton()
-        self.le_font = QtWidgets.QLineEdit('Path to font')
+        self.le_font = QtWidgets.QLineEdit('Font file')
         
         self.lbl_lutDir = QtWidgets.QLabel('Luts:')
         self.btn_lutDir = QtWidgets.QPushButton()
-        self.le_lutDir = QtWidgets.QLineEdit('Path to Color-space Luts folder')
+        self.le_lutDir = QtWidgets.QLineEdit('Color-space Luts folder')
         
         self.btn_cancel = QtWidgets.QPushButton('Cancel')
         self.btn_save = QtWidgets.QPushButton('Save Preferences')

@@ -1,5 +1,5 @@
 import os
-import logging
+# import logging
 from functools import cached_property
 from functools import partial
 
@@ -13,7 +13,7 @@ import package.preferences as preferences
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, resource_dir):
         super().__init__()
-        self.sub_logger = logging.getLogger('__main__')
+        # self.sub_logger = logging.getLogger('__main__')
         self.resource_dir = resource_dir
         self.pref_window = None
         self.setWindowTitle('Image Sequence Converter')
@@ -289,13 +289,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.prg_dialog.show()
         
         self.worker = Worker(lw_items, self.prg_dialog)
-        self.sub_logger.info('sent to worker')
+        # self.sub_logger.info(f'sent to worker: {self.worker.__dict__}')
 
         self.worker.moveToThread(self.thread)
         self.worker.signal_sequence_converted.connect(self.sequence_converted)
         self.thread.started.connect(self.worker.convert_sequences)
         self.thread.finished.connect(self.finish)
-        self.sub_logger.info('start thread')
+        # self.sub_logger.info('start thread')
         self.thread.start()       
 
     def abort(self):
