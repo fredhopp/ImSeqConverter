@@ -24,17 +24,17 @@ class PreferenceWindow(QtWidgets.QWidget):
         self.lbl_ffmpeg_link_description = QtWidgets.QLabel('ffmpeg download link:')
         self.lbl_ffmpeg_link = QtWidgets.QLabel()
         
-        self.lbl_ffmpegDir = QtWidgets.QLabel('ffmpeg folder:')
+        self.lbl_ffmpegDir = QtWidgets.QLabel('Ffmpeg:')
         self.btn_ffmpegDir = QtWidgets.QPushButton()
-        self.le_ffmpegDir = QtWidgets.QLineEdit('Path to ffmpeg executable')
+        self.le_ffmpegDir = QtWidgets.QLineEdit('Ffmpeg bin folder')
         
-        self.lbl_font = QtWidgets.QLabel('Font used for frame overlay:')
+        self.lbl_font = QtWidgets.QLabel('Font:')        
         self.btn_font = QtWidgets.QPushButton()
-        self.le_font = QtWidgets.QLineEdit('Path to font')
+        self.le_font = QtWidgets.QLineEdit('Font file')
         
-        self.lbl_lutDir = QtWidgets.QLabel('Colospace Luts folder:')
+        self.lbl_lutDir = QtWidgets.QLabel('Luts:')
         self.btn_lutDir = QtWidgets.QPushButton()
-        self.le_lutDir = QtWidgets.QLineEdit('Path to Colospace Luts folder')
+        self.le_lutDir = QtWidgets.QLineEdit('Color-space Luts folder')
         
         self.btn_cancel = QtWidgets.QPushButton('Cancel')
         self.btn_save = QtWidgets.QPushButton('Save Preferences')
@@ -185,3 +185,29 @@ def check():
 def create_folder():
     if not os.path.isdir(default_path()):
         os.makedirs(default_path())
+
+def browse_save(key:str, value):
+    pref_dir = default_path()
+    create_folder()
+    pref_file = os.path.join(pref_dir,'preferences.json')
+    
+    with open(pref_file,'r+') as file:
+        file_data = json.load(file)
+        
+        file_data.update({key: str(value)})
+        file.seek(0)
+        json.dump(file_data, file, indent = 4)
+
+def browse_load(key):
+    pref_dir = default_path()
+    pref_file = os.path.join(pref_dir,'preferences.json')
+    with open(pref_file,'r') as file:
+        file_data = json.load(file)       
+         
+        try: 
+            return_value = file_data[key]
+        except:
+            return_value = False 
+            
+        return return_value
+        
