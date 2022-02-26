@@ -20,3 +20,11 @@ dist/ImSeqConverter_v1.0.2/
 src/main/python/package/preferences/
 
 src/main/python/package/__pycache__/
+
+src/main/python/__pycache__/
+
+dist/ImSeqConverter.exe
+
+dist/fonts/
+
+dist/luts/

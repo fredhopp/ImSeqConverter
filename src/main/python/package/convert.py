@@ -108,7 +108,7 @@ class ConvertToMovie():
         # ffmpeg compression related stuff
         if self.format in ['mp4 - h.264', 'mp4 - h.265']:    
             h26x_lib_version = self.format[-1]
-            dic_quality = {'High': 18, 'Medium': 23, 'Low': 28} # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28
+            dic_quality = {'High': 13, 'Medium': 23, 'Low': 28} # -crf 0-51 0:lossless 23:default 51:worst -> usually between 18-28 (old values: 18,23,28)
             ffmpegArg_compression1 = f'-c:v libx26{h26x_lib_version} -crf {dic_quality[self.quality]}'
             ffmpegArg_compression2 = 'format=yuv420p,' # include comma, so that we can skip in the command if not needed
         elif self.format == 'mov - prores':

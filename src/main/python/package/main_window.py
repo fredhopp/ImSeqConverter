@@ -8,6 +8,7 @@ from PySide6 import QtGui, QtWidgets, QtCore
 from package.worker import Worker
 from package.file_sequence import SequencesFromFiles
 import package.preferences as preferences
+import package.luts as luts
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -18,6 +19,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pref_window = None
         self.setWindowTitle('Image Sequence Converter')
         self.setup_ui()
+        if not preferences.check():
+            self.open_preferences('')
 
     def setup_ui(self):
         self.create_widgets()
@@ -25,6 +28,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_layouts()
         self.add_widgets_to_layouts()
         self.setup_connections()
+        
 
     def create_widgets(self):
         self.central_widget =  QtWidgets.QWidget()               # define central widget
@@ -75,14 +79,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.btn_remove.setToolTip('Remove selected images sequences from the list. (Del)')
         
         self.lbl_outputSettings.setAlignment(QtCore.Qt.AlignCenter)
-        self.combo_colorspaceIn.addItem('ACEScg')
-        self.combo_colorspaceIn.addItem('Utility - Linear - sRGB')
-        self.combo_colorspaceIn.addItem('Output - sRGB')
-        self.combo_colorspaceIn.addItem('Output - Rec.709')
-
-        self.combo_colorspaceOut.addItem('Output - sRGB')
-        self.combo_colorspaceOut.addItem('Output - Rec.709')
-        self.combo_colorspaceOut.addItem('Utility - sRGB - Texture')
+        
+        self.populate_colorspaces()
         
         self.combo_format.addItem('mp4 - h.264')
         self.combo_format.addItem('mp4 - h.265')
@@ -166,8 +164,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.le_outputname.textChanged.connect(partial(self.update_sequence_attribute, 'outputname', self.le_outputname.text()))
         self.combo_format.currentTextChanged.connect(partial(self.update_sequence_attribute, 'format', self.combo_format.currentText()))
         self.combo_quality.currentTextChanged.connect(partial(self.update_sequence_attribute, 'quality', self.combo_quality.currentText()))
-        self.combo_colorspaceIn.currentTextChanged.connect(partial(self.update_sequence_attribute, 'colorspaceIn', self.combo_quality.currentText()))
-        self.combo_colorspaceOut.currentTextChanged.connect(partial(self.update_sequence_attribute, 'colorspaceOut', self.combo_quality.currentText()))
+        self.combo_colorspaceIn.currentTextChanged.connect(partial(self.update_sequence_attribute_colorspaceIn, self.combo_colorspaceIn.currentText()))
+        self.combo_colorspaceOut.currentTextChanged.connect(partial(self.update_sequence_attribute, 'colorspaceOut', self.combo_colorspaceIn.currentText()))
         self.combo_fps.currentTextChanged.connect(partial(self.update_sequence_attribute, 'fps', self.combo_fps.currentText()))
         self.combo_resolution.currentTextChanged.connect(partial(self.update_sequence_attribute, 'resolution', self.combo_resolution.currentText()))
         self.spn_head.valueChanged.connect(partial(self.update_sequence_attribute, 'head', self.spn_head.value()))
@@ -193,6 +191,21 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pref_window = preferences.PreferenceWindow()
         self.pref_window.show()
 
+    def populate_colorspaces(self):
+        self.combo_colorspaceIn.clear()
+        self.combo_colorspaceOut.clear()
+        self.combo_colorspaceIn.addItem('--Ignore--')
+        self.combo_colorspaceOut.addItem('--Ignore--')
+        if preferences.check():
+            lut = luts.Luts()
+            self.luts_dict = lut.get_luts()
+            for key, value in self.luts_dict.items():
+                if key != '--Ignore--':
+                    self.combo_colorspaceIn.addItem(key)            
+                
+        self.combo_colorspaceIn.setCurrentText('--Ignore--')
+        self.combo_colorspaceOut.setCurrentText('--Ignore--')
+                
     def update_sequence_attribute(self, attribute, connect_item, attrib_value ):
         # sourcery skip: use-named-expression
         list_items = self.lw_files.selectedItems()
@@ -205,11 +218,38 @@ class MainWindow(QtWidgets.QMainWindow):
                     attrib_value = f'"{attrib_value}"'
                 command = f'list_item.{attribute} = {attrib_value}'
                 exec(command)
+    
+    def update_sequence_attribute_colorspaceIn(self, connect_item, attrib_value ):
+        if list_items := self.lw_files.selectedItems():
+            for list_item in list_items:
+                list_item.colorspaceIn = attrib_value
+            colorspace_out_list = self.luts_dict[attrib_value]
+            self.combo_colorspaceOut.clear()
+            self.combo_colorspaceOut.addItems(colorspace_out_list)
 
     def update_properties_display(self):
         if self.lw_files.selectedItems():
+            
             self.enable_disable_attribute_widgets(False)
             list_item = self.lw_files.selectedItems()[-1]
+            # listitem_attributes = ['colorspaceIn',
+            #                    'colorspaceOut',
+            #                    'folder','format',
+            #                    'fps',
+            #                    'head',
+            #                    'outputfolder',
+            #                    'outputname',
+            #                    'ovl_framenum',
+            #                    'processed',
+            #                    'quality',
+            #                    'resolution',
+            #                    'seqtype',
+            #                    'sourcepath',
+            #                    'start',
+            #                    'tail',]
+            # for listitem_attr in listitem_attributes:
+            #     print(f'{listitem_attr}: {getattr(list_item,listitem_attr)}')
+            
             self.le_outputFolder.setText(list_item.outputfolder)
             self.combo_colorspaceIn.setCurrentText(list_item.colorspaceIn)
             self.combo_colorspaceOut.setCurrentText(list_item.colorspaceOut)
@@ -329,12 +369,10 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
 
     def dropEvent(self, event):
-        if preferences.check():
-            event.accept() # on animation enabled OS, the file would visually go back to the finder (OS UI animation)-> accept
-            file_list = [url.toLocalFile() for url in event.mimeData().urls()]
-            self.add_sequences(file_list)
-        else:
-            self.open_preferences('')
+        event.accept()
+        self.populate_colorspaces()
+        file_list = [url.toLocalFile() for url in event.mimeData().urls()]
+        self.add_sequences(file_list)
     
     def pick_files(self):
         if not preferences.check():
@@ -379,8 +417,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 lw_item.format = 'mp4 - h.264'
                 
                 lw_item.quality = 'High'
-                lw_item.colorspaceIn = 'ACEScg'
-                lw_item.colorspaceOut = 'Output - sRGB'
+                lw_item.colorspaceIn = '--Ignore--'
+                lw_item.colorspaceOut = '--Ignore--'
                 lw_item.ovl_framenum = False
                 lw_item.resolution = 'Original'
                 lw_item.seqtype = seq.seqtype
@@ -394,7 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 else: # lw_item.seqtype == 'MOV':
                     lw_item.sourcepath = seq.sourcepath
                     lw_item.fps = str(seq.fps)
-
+                    
     @cached_property
     def cache_IconChecked(self):
         return QtGui.QIcon(os.path.join(self.resource_dir, 'icons', 'checked.svg'))
