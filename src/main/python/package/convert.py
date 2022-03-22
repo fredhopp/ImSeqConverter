@@ -22,6 +22,7 @@ class ConvertToMovie():
                 colorspaceIn='None',
                 colorspaceOut='None',
                 overlay_framenum=False,
+                overlay_title=False,
                 resolution='Original',
                 outputfolder='',
                 seqtype='IMG',
@@ -56,6 +57,7 @@ class ConvertToMovie():
         self.colorspaceIn = colorspaceIn
         self.colorspaceOut = colorspaceOut
         self.overlay_framenum = overlay_framenum
+        self.overlay_title = overlay_title
         self.resolution = resolution
         self.destinationfile = os.path.join(os.path.normpath(self.outputfolder), f'{self.filename}.{self.extension}')
         self.seqtype = seqtype
@@ -84,8 +86,20 @@ class ConvertToMovie():
                                         r"text='%{frame_num}':"
                                         f'start_number={self.startframe}:'
                                         r'x=(w-tw)/2:'
-                                        # r"y=h-(2*lh):" # jitters because ofvariable character height :(
+                                        # r"y=h-(2*lh):" # jitters because of variable character height :(
                                         r'y=h-ceil(h/20):'
+                                        r'fontcolor=LightGrey:'
+                                        r'fontsize=ceil(h/20):'
+                                        r'box=0:'
+                                        r'alpha=.5'
+                                        r',' # include comma, so that we can skip the overlay altogether in the command if not needed
+                                        )
+        ffmpegArg_titleOverlay = ''
+        if self.overlay_framenum:
+            ffmpegArg_titleOverlay = (f'drawtext=fontfile={font_path}:'
+                                        f'text={self.filename}:'
+                                        r'x=(w-tw)/2:'
+                                        r'y=5:' 
                                         r'fontcolor=LightGrey:'
                                         r'fontsize=ceil(h/20):'
                                         r'box=0:'
@@ -116,12 +130,12 @@ class ConvertToMovie():
             ffmpegArg_compression1 = f'-c:v prores_ks -profile:v {dic_quality[self.quality]} -vendor apl0 -pix_fmt yuv422p10le'
             ffmpegArg_compression2 = '' # skipped in prores_ks, to be verified
 
-        ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
+        ffmpeg_args = f'-start_number {self.startframe} -y -framerate {self.fps} -i "{sourcepath}" -vframes {self.framerange} {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_titleOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
         if self.seqtype == 'MOV':
             start_timecode = self.startframe/self.fps
             end_timecode = self.framerange/self.fps            
             ffmpegArg_timecode = f'-ss {start_timecode} -t {end_timecode} -async 1 -strict -2'            
-            ffmpeg_args = f'-y {ffmpegArg_timecode} -i "{sourcepath}" {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
+            ffmpeg_args = f'-y {ffmpegArg_timecode} -i "{sourcepath}" {ffmpegArg_compression1} -vf "{ffmpegArg_frameOverlay}{ffmpegArg_titleOverlay}{ffmpegArg_lut}{ffmpegArg_compression2}{ffmpeg_scale_arg}{ffmpeg_pad_arg}" "{destinationfile}"'
 
         file_progress_path = os.path.join(preferences.default_path(),'progress.buffer').replace('\\','/')
         ffmpeg_progress_args = f' -progress "{file_progress_path} "'

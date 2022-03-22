@@ -56,7 +56,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.combo_quality = QtWidgets.QComboBox()
         self.combo_resolution = QtWidgets.QComboBox()
 
-        self.check_framenum = QtWidgets.QCheckBox()
+        self.check_ovl_framenum = QtWidgets.QCheckBox()
+        self.check_ovl_title = QtWidgets.QCheckBox()
 
         self.btn_outputFolder = QtWidgets.QPushButton()
         self.le_outputFolder = QtWidgets.QLineEdit('Ouput Folder')
@@ -149,7 +150,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_form_layout.addRow('Resolution',self.combo_resolution)
         self.right_form_layout.addRow('Trim Head',self.spn_head)
         self.right_form_layout.addRow('Trim Tail',self.spn_tail)
-        self.right_form_layout.addRow('Overlay Frame Number',self.check_framenum)
+        self.right_form_layout.addRow('Overlay Frame Number',self.check_ovl_framenum)
+        self.right_form_layout.addRow('Overlay Title',self.check_ovl_title)
 
         self.right_folder_layout.addWidget(self.btn_outputFolder)
         self.right_folder_layout.addWidget(self.le_outputFolder)
@@ -170,7 +172,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.combo_resolution.currentTextChanged.connect(partial(self.update_sequence_attribute, 'resolution', self.combo_resolution.currentText()))
         self.spn_head.valueChanged.connect(partial(self.update_sequence_attribute, 'head', self.spn_head.value()))
         self.spn_tail.valueChanged.connect(partial(self.update_sequence_attribute, 'tail', self.spn_tail.value()))
-        self.check_framenum.stateChanged.connect(partial(self.update_sequence_attribute, 'ovl_framenum', self.check_framenum.isChecked()))
+        self.check_ovl_framenum.stateChanged.connect(partial(self.update_sequence_attribute, 'ovl_framenum', self.check_ovl_framenum.isChecked()))
         self.btn_outputFolder.clicked.connect(self.pick_folder)
         self.le_outputFolder.textChanged.connect(partial(self.update_sequence_attribute, 'outputfolder', self.le_outputFolder.text()))
         self.btn_convert.clicked.connect(self.convert_sequences)
@@ -258,7 +260,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.combo_quality.setCurrentText(list_item.quality)
             self.combo_format.setCurrentText(list_item.format)
             self.combo_fps.setCurrentText(list_item.fps)
-            self.check_framenum.setChecked(list_item.ovl_framenum)
+            self.check_ovl_framenum.setChecked(list_item.ovl_framenum)
             self.combo_resolution.setCurrentText(list_item.resolution)
                         
             selected_seqtype_values = list(set([item.seqtype for item in self.lw_files.selectedItems()]))
@@ -291,7 +293,8 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self.combo_colorspaceIn.setDisabled(arg)
         self.combo_colorspaceOut.setDisabled(arg)
-        self.check_framenum.setDisabled(arg)
+        self.check_ovl_framenum.setDisabled(arg)
+        self.check_ovl_title.setDisabled(arg)
         self.combo_resolution.setDisabled(arg)
 
         self.spn_head.setDisabled(arg)
@@ -420,6 +423,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 lw_item.colorspaceIn = '--Ignore--'
                 lw_item.colorspaceOut = '--Ignore--'
                 lw_item.ovl_framenum = False
+                lw_item.ovl_title = False
                 lw_item.resolution = 'Original'
                 lw_item.seqtype = seq.seqtype
                 
