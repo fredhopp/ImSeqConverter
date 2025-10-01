@@ -65,20 +65,45 @@
   - Impact: User experience during long conversions
   - Priority: Low
 
+## ✅ Recently Completed (Latest)
+
+### PyInstaller Configuration Fixes
+- [x] **Fixed hardcoded paths in main_onefile.spec**
+  - Removed `z:/Programming/ImSeqConverter` references
+  - Updated to use relative paths: `src/main/python/main.py`
+  - Location: `main_onefile.spec:7`
+
+- [x] **Fixed hardcoded paths in constants.py**
+  - Changed `Z:/Programming/ImSeqConverter/` to relative paths
+  - Location: `src/main/python/package/constants.py:3-4`
+
+- [x] **Added icon configuration to PyInstaller**
+  - Icon file: `src/main/resources/icons/ImSeqConverter.ico` ✅ EXISTS
+  - Added to spec: `icon='src/main/resources/icons/ImSeqConverter.ico'`
+  - Location: `main_onefile.spec:37`
+
+- [x] **Improved PyInstaller configuration**
+  - Added resources: `datas=[('src/main/resources', 'resources')]`
+  - Added hidden imports: PySide6 modules and clique
+  - Set console=False for proper GUI app
+  - Updated executable name to 'ImSeqConverter'
+
 ## 🔄 Next Steps
 
 ### Immediate (After User Approval)
-1. Execute commit with prepared message
+1. Execute commit with PyInstaller fixes
 2. Push changes to GitHub repository
 3. Verify all changes are properly uploaded
 
 ### Future Development
-1. Fix file name parsing bug for spaces
-2. Implement comprehensive error handling
-3. Improve progress tracking accuracy
-4. Add more output formats
-5. Implement preset saving/loading
-6. Add command-line interface
+1. Fix CRITICAL missing frame bug (worker.py:24) - frame range calculation
+2. Fix file name parsing bug for spaces (file_sequence.py:114)
+3. Test PyInstaller build process with new configuration
+4. Implement comprehensive error handling
+5. Improve progress tracking accuracy
+6. Add more output formats
+7. Implement preset saving/loading
+8. Add command-line interface
 
 ## 📝 Development Notes
 
