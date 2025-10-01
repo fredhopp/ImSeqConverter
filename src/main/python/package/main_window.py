@@ -9,6 +9,7 @@ from package.worker import Worker
 from package.file_sequence import SequencesFromFiles
 import package.preferences as preferences
 import package.luts as luts
+from package import get_version
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -17,7 +18,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sub_logger = logging.getLogger('__main__')
         self.resource_dir = resource_dir
         self.pref_window = None
-        self.setWindowTitle('Image Sequence Converter')
+        self.setWindowTitle(f'Image Sequence Converter v{get_version()}')
         self.setup_ui()
         if not preferences.check():
             self.open_preferences('')
@@ -192,6 +193,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.pref_window is None:
             self.pref_window = preferences.PreferenceWindow()
         self.pref_window.show()
+        self.pref_window.raise_()
+        self.pref_window.activateWindow()
 
     def populate_colorspaces(self):
         self.combo_colorspaceIn.clear()
@@ -342,11 +345,24 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
     
     def sequence_converted(self, lw_item, returned_value):
-            if returned_value:
-                lw_item.setIcon(self.cache_IconChecked)
-                self.prg_dialog.setValue(self.prg_dialog.value() + 1) # TO DO: still does not update properly
-                lw_item.processed = True
-                self.thread.quit()            
+        if returned_value:
+            lw_item.setIcon(self.cache_IconChecked)
+            lw_item.setBackground(self.color_green)  # Change background to green
+            lw_item.processed = True
+            # Update progress dialog
+            current_value = self.prg_dialog.value()
+            self.prg_dialog.setValue(current_value + 1)
+            
+            # Update the progress text
+            remaining = self.prg_dialog.maximum() - current_value - 1
+            if remaining > 0:
+                self.prg_dialog.label.setText(f'Completed: {lw_item.outputname}\nRemaining: {remaining}')
+            else:
+                self.prg_dialog.label.setText(f'Completed: {lw_item.outputname}\nAll conversions finished!')
+        else:
+            # Mark as failed with red background
+            lw_item.setBackground(QtGui.QColor(255, 200, 200))  # Light red
+            lw_item.setToolTip('Conversion failed')            
                 
     # Drag & Drop
     def dragEnterEvent(self, event):

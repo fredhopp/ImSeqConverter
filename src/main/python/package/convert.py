@@ -112,8 +112,8 @@ class ConvertToMovie():
         if self.resolution != 'Original':
             hres = dic_res[self.resolution][0]
             vres = dic_res[self.resolution][1]
-            ffmpeg_scale_arg = f'scale=(iw*sar)*min({hres}/(iw*sar)\,{vres}/ih):ih*min({hres}/(iw*sar)\,{vres}/ih),' # include comma, so that we can skip in the command if not needed
-            ffmpeg_pad_arg = f'pad={hres}:{vres}:({hres}-iw*min({hres}/iw\,{vres}/ih))/2:({vres}-ih*min({hres}/iw\,{vres}/ih))/2' # not including',' since it's the last arg of the -vf section
+            ffmpeg_scale_arg = f'scale=(iw*sar)*min({hres}/(iw*sar)\\,{vres}/ih):ih*min({hres}/(iw*sar)\\,{vres}/ih),' # include comma, so that we can skip in the command if not needed
+            ffmpeg_pad_arg = f'pad={hres}:{vres}:({hres}-iw*min({hres}/iw\\,{vres}/ih))/2:({vres}-ih*min({hres}/iw\\,{vres}/ih))/2' # not including',' since it's the last arg of the -vf section
         else:
             ffmpeg_scale_arg = ''
             ffmpeg_pad_arg = 'pad=ceil(iw/2)*2:ceil(ih/2)*2' # adding black pixel padding for uneven resolutions -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2"
@@ -156,12 +156,22 @@ class ConvertToMovie():
                                     )
         while True:
             shell_line = process.stdout.readline()
+            if shell_line:
+                # Print FFmpeg output to console for debugging
+                try:
+                    output_line = shell_line.decode('utf-8', errors='ignore').strip()
+                    if output_line and not output_line.startswith('frame='):
+                        print(f"[FFmpeg] {output_line}")
+                except:
+                    pass
+            
             where = file_progress.tell()
             if line := file_progress.readline():
                 if line.startswith('frame='):
                     percentage = math.ceil(float(line.split("=")[-1])/float(self.framerange)*100.0)
                     text = f'{self.filename} \nEncoding: {percentage} %' # frame: {line.split("=")[-1]}'
                     self.dialog.label.setText(text)
+                    print(f"[Progress] {self.filename}: {percentage}%")
             else:
                 # time.sleep(.5)
                 file_progress.seek(where)

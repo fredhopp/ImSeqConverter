@@ -95,15 +95,22 @@
 2. Push changes to GitHub repository
 3. Verify all changes are properly uploaded
 
+### Current Development Tasks
+1. **Test latest built executable** - Verify v1.1.0 build works correctly
+2. **Fix preferences window behavior** - Bring to front when auto-opens on first start
+3. **Improve marked files behavior** - Change visual feedback when conversion completed
+4. **Add debug command line arguments** - Enable debug mode via CLI options
+5. **Fix progress bars** - Make single and batch progress work as expected
+6. **Show FFmpeg output** - Display FFmpeg execution in app terminal/console
+7. **Commit and push improvements** - Save all changes to repository
+
 ### Future Development
 1. Fix CRITICAL missing frame bug (worker.py:24) - frame range calculation
 2. Fix file name parsing bug for spaces (file_sequence.py:114)
-3. Test PyInstaller build process with new configuration
-4. Implement comprehensive error handling
-5. Improve progress tracking accuracy
-6. Add more output formats
-7. Implement preset saving/loading
-8. Add command-line interface
+3. Implement comprehensive error handling
+4. Add more output formats
+5. Implement preset saving/loading
+6. Add command-line interface
 
 ## 📝 Development Notes
 

@@ -85,7 +85,7 @@ class SequencesFromFiles():
         if imageFilePath_list:
             collections, remainder = clique.assemble(imageFilePath_list)
             dir = os.path.dirname(imageFilePath_list[0]) #assuming common folder, see if there is a need for files from multiple locations
-            all_files_in_dir = glob.glob(f'{dir}\*')
+            all_files_in_dir = glob.glob(f'{dir}\\*')
             dir_collections, dir_remainder = clique.assemble(all_files_in_dir)
             dir_remainder = [remainder.replace("\\","/") for remainder in dir_remainder]
 
