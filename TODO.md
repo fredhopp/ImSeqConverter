@@ -67,7 +67,39 @@
 
 ## ✅ Recently Completed (Latest)
 
-### PyInstaller Configuration Fixes
+### v1.2.0 Major Improvements - COMPLETED ✅
+- [x] **Command Line Arguments Support**
+  - Added `--debug` / `-d`: Enable debug mode with verbose logging
+  - Added `--console` / `-c`: Show console window for debugging  
+  - Added `--version` / `-v`: Display version information
+  - Location: `src/main/python/main.py`
+
+- [x] **Enhanced User Experience**
+  - Fixed preferences window to bring to front when auto-opens
+  - Improved marked files behavior with visual feedback
+  - Green background for completed conversions
+  - Red background for failed conversions
+  - Location: `src/main/python/package/main_window.py`
+
+- [x] **Debug Features & Console Output**
+  - Added FFmpeg output logging to console for debugging
+  - Enhanced progress bars with better status messages
+  - Real-time conversion progress display
+  - Location: `src/main/python/package/convert.py`
+
+- [x] **Version Management System**
+  - Created centralized version tracking (`src/main/python/package/__init__.py`)
+  - Added VERSION file for external tools
+  - Version display in window title (v1.2.0)
+  - Proper version info in CLI arguments
+
+- [x] **Technical Improvements**
+  - Fixed syntax warnings in regex patterns
+  - Enabled console mode in PyInstaller for debug output
+  - Improved error handling and visual feedback
+  - Updated PyInstaller configuration
+
+### Previous PyInstaller Configuration Fixes
 - [x] **Fixed hardcoded paths in main_onefile.spec**
   - Removed `z:/Programming/ImSeqConverter` references
   - Updated to use relative paths: `src/main/python/main.py`
@@ -85,24 +117,41 @@
 - [x] **Improved PyInstaller configuration**
   - Added resources: `datas=[('src/main/resources', 'resources')]`
   - Added hidden imports: PySide6 modules and clique
-  - Set console=False for proper GUI app
+  - Set console=True for debug output
   - Updated executable name to 'ImSeqConverter'
 
 ## 🔄 Next Steps
 
-### Immediate (After User Approval)
-1. Execute commit with PyInstaller fixes
-2. Push changes to GitHub repository
-3. Verify all changes are properly uploaded
+### Immediate (Current Priority)
+1. **User Testing** - Comprehensive testing of v1.2.0 features
+2. **Documentation** - Update README.md with new features
+3. **Build Testing** - Verify new build works with all improvements
+4. **Distribution** - Package v1.2.0 for release
+
+### Completed Recently ✅
+- All v1.2.0 improvements implemented and committed
+- Repository successfully pushed to GitHub (commit 4d0d71a)
+- Version management system implemented
 
 ### Current Development Tasks
-1. **Test latest built executable** - Verify v1.1.0 build works correctly
-2. **Fix preferences window behavior** - Bring to front when auto-opens on first start
-3. **Improve marked files behavior** - Change visual feedback when conversion completed
-4. **Add debug command line arguments** - Enable debug mode via CLI options
-5. **Fix progress bars** - Make single and batch progress work as expected
-6. **Show FFmpeg output** - Display FFmpeg execution in app terminal/console
-7. **Commit and push improvements** - Save all changes to repository
+1. **User Testing** - Comprehensive testing of v1.2.0 features
+   - Test command line arguments (--debug, --version)
+   - Test preferences window behavior on first launch
+   - Test visual feedback for completed/failed conversions
+   - Test console output and FFmpeg logging
+   - Test progress bars and status messages
+   - Verify all improvements work as expected
+
+2. **Documentation Updates** - Update README.md with new features
+   - Document command line arguments
+   - Update usage examples
+   - Document debug mode features
+   - Update version information
+
+3. **Build and Distribution** - Create new v1.2.0 build
+   - Test PyInstaller build with new features
+   - Verify console mode works correctly
+   - Package for distribution
 
 ### Future Development
 1. Fix CRITICAL missing frame bug (worker.py:24) - frame range calculation

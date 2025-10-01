@@ -1,4 +1,4 @@
-# Image Sequence Converter
+# Image Sequence Converter v1.2.0
 
 A professional-grade application for converting image sequences and video files with advanced color space management, designed specifically for VFX and post-production workflows.
 
@@ -28,6 +28,9 @@ A professional-grade application for converting image sequences and video files 
 - **Trim Functionality** - Head/tail frame trimming (up to 2000 frames)
 - **Progress Tracking** - Real-time conversion progress with cancel support
 - **Preferences System** - Configurable paths for FFmpeg, fonts, and LUTs
+- **Command Line Interface** - Debug mode and version information
+- **Visual Feedback** - Color-coded status for completed/failed conversions
+- **Console Output** - Real-time FFmpeg progress and error logging
 
 ## Installation
 
@@ -54,6 +57,27 @@ Download the latest release from the [Releases](https://github.com/fredhopp/ImSe
 2. **Configure Settings** - Select output format, color space, quality, etc.
 3. **Set Output Path** - Choose destination folder
 4. **Convert** - Click "Convert" to start batch processing
+
+### Command Line Options
+```bash
+# Normal usage
+ImSeqConverter.exe
+
+# Debug mode with verbose logging
+ImSeqConverter.exe --debug
+
+# Show version information
+ImSeqConverter.exe --version
+
+# Show help
+ImSeqConverter.exe --help
+```
+
+### Debug Features
+- **Console Output**: Real-time FFmpeg progress and error messages
+- **Verbose Logging**: Detailed log files when debug mode is enabled
+- **Visual Feedback**: Green background for completed, red for failed conversions
+- **Progress Tracking**: Shows remaining conversions and completion status
 
 ### Supported File Types
 - **Image Sequences**: JPG, JPEG, PNG, TIF, TIFF, EXR, DPX, TGA
@@ -88,10 +112,13 @@ git clone https://github.com/fredhopp/ImSeqConverter.git
 cd ImSeqConverter
 
 # Install dependencies
-pip install -r requirements.txt
+pip install PySide6 clique PyInstaller
 
 # Run the application
 python src/main/python/main.py
+
+# Run with debug mode
+python src/main/python/main.py --debug
 
 # Build executable with PyInstaller
 pyinstaller main_onefile.spec
@@ -105,9 +132,16 @@ pyinstaller main_onefile.spec
 ## Known Issues & Limitations
 
 ### Current Bugs
-1. **File Names with Spaces** - Sequence parsing breaks if file names contain spaces (see `file_sequence.py:114`)
-2. **Missing Error Handling** - Limited error handling for FFmpeg failures
-3. **Progress Updates** - Progress dialog may not update properly during conversion
+1. **CRITICAL: Missing Last Frame** - Frame range calculation loses the last frame (see `worker.py:24`)
+2. **File Names with Spaces** - Sequence parsing breaks if file names contain spaces (see `file_sequence.py:114`)
+3. **Limited Error Handling** - Some edge cases in FFmpeg error handling
+
+### Recent Fixes (v1.2.0)
+- ✅ **Preferences Window** - Now properly brings to front on first launch
+- ✅ **Visual Feedback** - Color-coded conversion status (green/red backgrounds)
+- ✅ **Console Output** - Real-time FFmpeg progress and error logging
+- ✅ **Progress Tracking** - Improved progress bars with remaining count
+- ✅ **Debug Mode** - Command line debugging with verbose logging
 
 ### Planned Improvements
 - [ ] Fix file name parsing for spaces
