@@ -111,7 +111,9 @@ class SequencesFromFiles():
                     
     def add_properties(self, collection):
         collection.start = str(collection).split()[1].replace('[','').replace(']','').split('-')[0]
+        # BREAKS IF SPACE IN NAME, index out of list or something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         collection.end = str(collection).split()[1].replace('[','').replace(']','').split('-')[1]
+        
 
         shortname = os.path.basename(collection.head)
         folder =  os.path.dirname(collection.head)

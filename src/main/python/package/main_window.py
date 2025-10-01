@@ -101,8 +101,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.combo_resolution.addItem('1080p')
         self.combo_resolution.addItem('UHD')
 
-        self.spn_head.setRange(0,100)
-        self.spn_tail.setRange(0,100)
+        self.spn_head.setRange(0,2000)
+        self.spn_tail.setRange(0,2000)
        
         self.btn_outputFolder.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogOpenButton')))
         self.le_outputFolder.setText('Output Folder...')
@@ -230,27 +230,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.combo_colorspaceOut.addItems(colorspace_out_list)
 
     def update_properties_display(self):
+        # TO DO : store  last display properties and compare. If different than last, that mean changed -> set the lw_item propery only -------------------------------------------------------------------------
         if self.lw_files.selectedItems():
             
             self.enable_disable_attribute_widgets(False)
             list_item = self.lw_files.selectedItems()[-1]
-            # listitem_attributes = ['colorspaceIn',
-            #                    'colorspaceOut',
-            #                    'folder','format',
-            #                    'fps',
-            #                    'head',
-            #                    'outputfolder',
-            #                    'outputname',
-            #                    'ovl_framenum',
-            #                    'processed',
-            #                    'quality',
-            #                    'resolution',
-            #                    'seqtype',
-            #                    'sourcepath',
-            #                    'start',
-            #                    'tail',]
-            # for listitem_attr in listitem_attributes:
-            #     print(f'{listitem_attr}: {getattr(list_item,listitem_attr)}')
             
             self.le_outputFolder.setText(list_item.outputfolder)
             self.combo_colorspaceIn.setCurrentText(list_item.colorspaceIn)
